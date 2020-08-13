@@ -1,0 +1,71 @@
+@column-num: 61;
+@row-num: 25;
+@gap-size: 2px;
+@cell: #66ccff;
+@cell-selected: #ff0000;
+@cell-included: rgb(52, 73, 94);
+@pure-bg: #ffffff;
+.time-picker-wrapper {
+    display: flex;
+    flex-direction: column;
+    box-shadow: -1px 1px 2px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    .header {
+        flex: 0;
+        text-align: center;
+        box-sizing: border-box;
+        padding: 5px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(@column-num, 1fr);
+        grid-template-rows:  repeat(@row-num, 1fr);
+        gap: @gap-size;
+        place-items: center center;
+        .index {
+            opacity: 0.5;
+        }
+        .index-hover {
+            opacity: 1;
+        }
+        .cell {
+            background-color: @cell;
+            width: 100%;
+            height: 100%;
+            cursor: pointer; 
+            &:hover {
+                background-color: @cell-selected;
+            }
+            &::before {
+                visibility: hidden;
+                content: attr(data-tooltip);
+                position: absolute;
+                background-color: @pure-bg;
+            }
+            &:hover::before {
+                visibility: hidden;
+            }
+            &:active {
+                transform: scale(0.7);
+                transition: transform 0.3s ease;
+            }
+        }
+        .cell-selected {
+            .cell();
+            background-color: @cell-selected;
+            &::before {
+                visibility: visible;
+            }
+        }
+        .cell-included {
+            .cell();
+            background-color: @cell-included;
+        }
+    }
+}
+
+:global {
+    
+}
