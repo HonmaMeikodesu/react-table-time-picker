@@ -6,28 +6,40 @@ let width, height, fontSize;
 export default function TimePicker({size, zIndex, setTimeRange, title}) {
 	const [selectedCell, setSelectedCell] = useState([null, null]);
 	const ref = useRef(null);
-	useEffect(() => {
+	const width = useMemo(() => {
 		switch (size) {
 			case 'small':
-				fontSize = '10px';
-				width = '850px';
-				height = '500px';
-				break;
+				return '900px'
 			case 'medium':
-				fontSize = '12px';
-				width = '1000px';
-				height = '550px';
-				break;
+				return '1100px';
 			case 'big':
-				fontSize = '16px';
-				width = '1300px';
-				height = '800px';
-				break;
+				return '1400px';
 			default:
-				fontSize = '10px';
-				width = '850px';
-				height = '500px';
-				break;
+				return '900px';
+		}
+	}, [size]);
+	const fontSize = useMemo(() => {
+		switch (size) {
+			case 'small':
+				return '10px'
+			case 'medium':
+				return '12px';
+			case 'big':
+				return '16px';
+			default:
+				return '10px';
+		}
+	}, [size]);
+	const height = useMemo(() => {
+		switch (size) {
+			case 'small':
+				return '500px'
+			case 'medium':
+				return '600px';
+			case 'big':
+				return '800px';
+			default:
+				return '500px';
 		}
 	}, [size]);
 
@@ -140,10 +152,6 @@ TimePicker.propTypes = {
 	setTimeRange: propTypes.func.isRequired,
 	size: propTypes.oneOf(['small', 'medium', 'big']),
 	title: propTypes.string,
-	// size  font-size  width  height
-	// small    10      850      400
-	// medium   12      1000     500
-	// big      16      1300     700
 }
 TimePicker.defaultProps = {
 	zIndex: 1,
