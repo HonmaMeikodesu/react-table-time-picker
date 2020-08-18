@@ -2,8 +2,8 @@ import React, {useState, useCallback, useMemo, useRef, useEffect} from 'react';
 import propTypes from 'prop-types';
 import styles from 'static/index.less';
 import hint from 'static/hint.svg';
-let width, height, fontSize;
-export default function TimePicker({size, zIndex, setTime, title, attachElement}) {
+
+export default function TimePicker({size, zIndex, setTime, title, attachElement, maxHeight, maxWidth, position}) {
 	const [selectedRange, setSelectedRange] = useState([null, null]);
 	const [visible, setVisible] = useState(false);
 	const ref = useRef(null);
@@ -60,6 +60,36 @@ export default function TimePicker({size, zIndex, setTime, title, attachElement}
 		}
 		return logo.concat(column, row);
 	}, [])
+
+	const containerLeft = useMemo(() => {
+		if (!positionRef.current) return;
+		const hitArea = positionRef.current.getBoundingClientRect(); // scroll bar is not includingly calculated here
+		const tweakWidth = maxWidth ? maxWidth < Number.parseInt(width) ? maxWidth : Number.parseInt(width) : Number.parseInt(width);
+		console.log(tweakWidth)
+		let result = null;
+		(position === 'top' || position === 'bottom') &&
+			(result = `${(hitArea.left + hitArea.right) / 2}px`)
+		position === 'left' &&
+			(result = `${hitArea.left - Number.parseInt(tweakWidth) > 0 ? (hitArea.left - Number.parseInt(tweakWidth)) : 0}px`);
+		position === 'right' &&
+			(result = `${hitArea.right}px`)
+		return result;
+	}, [positionRef.current]);
+
+	const containerTop = useMemo(() => {
+		if (!positionRef.current) return;
+		const hitArea = positionRef.current.getBoundingClientRect();
+		const tweakHeight = maxHeight ? maxHeight < Number.parseInt(height) ? maxHeight : Number.parseInt(height) : Number.parseInt(height);
+		let result = null;
+		console.log(hitArea.top , hitArea.bottom);
+		(position === 'left' || position === 'right') &&
+			(result = `${(hitArea.top + hitArea.bottom) / 2}px`)
+		position === 'top' &&
+			(result = `${hitArea.top - Number.parseInt(tweakHeight) > 0 ? (hitArea.top - Number.parseInt(tweakHeight)) : 0}px`)
+		position === 'bottom' &&
+			(result = `${hitArea.bottom}px`);
+		return result;
+	}, [positionRef.current])
 
 	const handleCellClick = useCallback(e => {
 		e.preventDefault();
@@ -156,9 +186,9 @@ export default function TimePicker({size, zIndex, setTime, title, attachElement}
 				setVisible(false);
 		})
 		return () => {
-			document.removeEventListener(clear);
+			document.removeEventListener('click',clear);
 		};
-	}, [ref, positionRef]);
+	}, []);
 	return (
 		<>
 			{container}
@@ -169,11 +199,13 @@ export default function TimePicker({size, zIndex, setTime, title, attachElement}
 						zIndex, 
 						fontSize, 
 						width, 
-						height, 
-						left: `${(positionRef.current.getBoundingClientRect().left + positionRef.current.getBoundingClientRect().right) / 2}px`,
+						height,
+						maxHeight: maxHeight ? maxHeight + 'px' : undefined,
+						maxWidth: maxWidth ? maxWidth + 'px' : undefined,
+						left: containerLeft,
+						top: containerTop,
 						display: `${visible ? 'block' : 'none'}`,
-						top: `${positionRef.current.getBoundingClientRect().top + positionRef.current.getBoundingClientRect().height}px`,
-						transform: 'translateX(-50%)'
+						transform: position === 'top' || position === 'bottom' ? 'translateX(-50%)' : undefined
 					}}
 				>
 					<div className={styles.header}>{title}</div>
@@ -190,6 +222,9 @@ export default function TimePicker({size, zIndex, setTime, title, attachElement}
 
 TimePicker.propTypes = {
 	zIndex: propTypes.number,
+	maxWidth: propTypes.number,
+	maxHeight: propTypes.number,
+	position: propTypes.oneOf(['top', 'right', 'bottom', 'left']),
 	setTime: propTypes.func.isRequired,
 	size: propTypes.oneOf(['small', 'medium', 'big']),
 	title: propTypes.string,
@@ -200,4 +235,5 @@ TimePicker.defaultProps = {
 	size: 'medium',
 	setTime: () => {},
 	title: 'react time picker',
+	position: 'bottom'
 }
