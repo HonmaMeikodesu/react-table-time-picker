@@ -2,11 +2,11 @@
   "name": "react-matrix-time-picker",
   "version": "1.0.0",
   "description": "a time picker that looks like a matrix in React",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --mode development",
-    "build": "rm -rf dist/ && webpack"
+    "start": "set NODE_ENV=dev&&webpack-dev-server --mode development",
+    "build": "rm -rf dist/&&set NODE_ENV=prod&&webpack"
   },
   "keywords": [
     "react",

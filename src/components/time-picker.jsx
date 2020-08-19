@@ -19,37 +19,37 @@ export default function TimePicker({
   const width = useMemo(() => {
     switch (size) {
       case 'small':
-        return '900px';
+        return '800px';
       case 'medium':
         return '1100px';
       case 'big':
         return '1400px';
       default:
-        return '900px';
+        return '800px';
     }
   }, [size]);
   const fontSize = useMemo(() => {
     switch (size) {
       case 'small':
-        return '10px';
+        return '8px';
       case 'medium':
         return '12px';
       case 'big':
         return '16px';
       default:
-        return '10px';
+        return '8px';
     }
   }, [size]);
   const height = useMemo(() => {
     switch (size) {
       case 'small':
-        return '400px';
+        return '350px';
       case 'medium':
         return '500px';
       case 'big':
         return '800px';
       default:
-        return '400px';
+        return '350px';
     }
   }, [size]);
 
@@ -59,9 +59,7 @@ export default function TimePicker({
     for (let i = 0; i < 60; i++) {
       column.push(
         <div key={`column-${i}`} className={styles.index} style={{ gridArea: `1 / ${i + 2} / 2 / ${i + 3}` }}>
-          {' '}
           {i}
-          {' '}
         </div>,
       );
     }
@@ -69,9 +67,7 @@ export default function TimePicker({
     for (let i = 0; i < 24; i++) {
       row.push(
         <div key={`row-${i}`} className={styles.index} style={{ gridArea: `${i + 2} / 1 / ${i + 3} / 2` }}>
-          {' '}
           {i}
-          {' '}
         </div>,
       );
     }
@@ -84,7 +80,7 @@ export default function TimePicker({
     const tweakWidth = maxWidth ? maxWidth < Number.parseInt(width, 10) ? maxWidth : Number.parseInt(width, 10) : Number.parseInt(width, 10);
     let result = null;
     (position === 'top' || position === 'bottom')
-  && (result = `${(hitArea.left + hitArea.right) / 2}px`);
+  && (result = `${(hitArea.left + hitArea.right) / 2 - Number.parseInt(tweakWidth, 10) / 2 > 0 ? ((hitArea.left + hitArea.right) / 2 - Number.parseInt(tweakWidth, 10) / 2) : 0}px`);
     position === 'left'
   && (result = `${hitArea.left - Number.parseInt(tweakWidth, 10) > 0 ? (hitArea.left - Number.parseInt(tweakWidth, 10)) : 0}px`);
     position === 'right'
@@ -98,7 +94,7 @@ export default function TimePicker({
     const tweakHeight = maxHeight ? maxHeight < Number.parseInt(height, 10) ? maxHeight : Number.parseInt(height, 10) : Number.parseInt(height, 10);
     let result = null;
     (position === 'left' || position === 'right')
-  && (result = `${(hitArea.top + hitArea.bottom) / 2}px`);
+  && (result = `${(hitArea.top + hitArea.bottom) / 2 - Number.parseInt(tweakHeight, 10) / 2 > 0 ? ((hitArea.top + hitArea.bottom) / 2 - Number.parseInt(tweakHeight, 10) / 2) : 0}px`);
     position === 'top'
   && (result = `${hitArea.top - Number.parseInt(tweakHeight, 10) > 0 ? (hitArea.top - Number.parseInt(tweakHeight, 10)) : 0}px`);
     position === 'bottom'
@@ -115,7 +111,9 @@ export default function TimePicker({
       nextSelectedCell = [null, null];
       nextSelectedCell[0] = target.dataset.id;
       let recover = [];
-      if (Number.parseInt(selectedRange[0], 10) < Number.parseInt(selectedRange[1], 10)) { recover = [...ref.current.children].slice(indexOffSet + Number.parseInt(selectedRange[0], 10), indexOffSet + Number.parseInt(selectedRange[1], 10) + 1); } else if (Number.parseInt(selectedRange[0], 10) > Number.parseInt(selectedRange[1], 10)) {
+      if (Number.parseInt(selectedRange[0], 10) < Number.parseInt(selectedRange[1], 10)) {
+        recover = [...ref.current.children].slice(indexOffSet + Number.parseInt(selectedRange[0], 10), indexOffSet + Number.parseInt(selectedRange[1], 10) + 1);
+      } else if (Number.parseInt(selectedRange[0], 10) > Number.parseInt(selectedRange[1], 10)) {
         recover = [...ref.current.children].slice(indexOffSet, indexOffSet + Number.parseInt(selectedRange[1], 10) + 1)
           .concat([...ref.current.children].slice(indexOffSet + Number.parseInt(selectedRange[0], 10), [...ref.current.children].length));
       } else recover = [[...ref.current.children][indexOffSet + Number.parseInt(selectedRange[0], 10)]];
@@ -123,8 +121,7 @@ export default function TimePicker({
       target.className = styles['cell-selected'];
     } else if (selectedRange[0] !== null) {
       nextSelectedCell[1] = target.dataset.id;
-      let cover; let first; let
-        last;
+      let cover; let first; let last;
       if (Number.parseInt(nextSelectedCell[1], 10) > Number.parseInt(nextSelectedCell[0], 10)) {
         cover = [...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10), indexOffSet + Number.parseInt(nextSelectedCell[1], 10) + 1);
         first = cover.shift();
@@ -163,7 +160,9 @@ export default function TimePicker({
     highLightColumnIndex.className = highLightRowIndex.className = flag ? styles['index-hover'] : styles.index;
     if (selectedRange[0] !== null && selectedRange[1] === null) {
       let cover = [];
-      if (Number.parseInt(e.target.dataset.id, 10) > Number.parseInt(selectedRange[0], 10)) { cover = [...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, indexOffset + Number.parseInt(e.target.dataset.id, 10)); } else if (Number.parseInt(e.target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
+      if (Number.parseInt(e.target.dataset.id, 10) > Number.parseInt(selectedRange[0], 10)) {
+        cover = [...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, indexOffset + Number.parseInt(e.target.dataset.id, 10));
+      } else if (Number.parseInt(e.target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
         cover = [...ref.current.children].slice(indexOffset, indexOffset + Number.parseInt(e.target.dataset.id, 10))
           .concat([...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, [...ref.current.children].length));
       } else cover = [];
@@ -216,11 +215,11 @@ export default function TimePicker({
           left: containerLeft,
           top: containerTop,
           display: `${visible ? 'block' : 'none'}`,
-          transform: position === 'top' || position === 'bottom' ? 'translateX(-50%)' : undefined,
         }}
       >
         <div className={styles.header}>{title}</div>
-        <div className={styles.container} ref={ref}>
+        {/* prevent unneccessary scrollbar appears due to grid overlay */}
+        <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10 }}>
           {index.concat(timePoint)}
         </div>
       </div>

@@ -12,6 +12,7 @@ function App() {
         position="bottom"
         maxWidth={1000}
         maxHeight={400}
+        size="small"
         attachElement={(
           <input
             style={{
