@@ -5,7 +5,7 @@ import moment from 'moment';
 import TimePicker from 'components/time-picker';
 
 function App() {
-  const [time, setTime] = useState([moment(), moment().minute(40)]);
+  const [time, setTime] = useState([moment(), moment()]);
   return (
     <div>
       <TimePicker
@@ -13,10 +13,11 @@ function App() {
         position="bottom"
         maxWidth={1000}
         maxHeight={400}
-        size="medium"
+        size="small"
         value={time}
         attachElement={(
           <input
+            readOnly
             style={{
               position: 'absolute', left: '500px', top: '100px', width: '400px', textAlign: 'center',
             }}

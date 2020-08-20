@@ -50,13 +50,13 @@ export default function TimePicker({
   const height = useMemo(() => {
     switch (size) {
       case 'small':
-        return '350px';
+        return '300px';
       case 'medium':
         return '500px';
       case 'big':
         return '800px';
       default:
-        return '350px';
+        return '300px';
     }
   }, [size]);
 
@@ -188,6 +188,18 @@ export default function TimePicker({
     }
   }, [selectedRange, index, setOnHoverRange, crossDays]);
 
+  const handleClear = useCallback(() => {
+    setSelectedRange([null, null]);
+    setOnHoverRange(null);
+    const beginMoment = moment(value[0]);
+    const endMoment = moment(value[1]);
+    beginMoment.hour(0).minute(0);
+    endMoment.hour(0).minute(0);
+    setValue([beginMoment, endMoment]);
+    const indexOffSet = index.length;
+    [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell)
+  }, [setValue, value]);
+
   const timePoint = useMemo(() => {
     const arr = [];
     for (let i = 0; i < 24; i++) {
@@ -241,7 +253,7 @@ export default function TimePicker({
       document.removeEventListener('click', clear);
     };
     // TODO why ref.current don't work here?
-  }, [crossDays, index.length, value, positionRef.current]);
+  }, [positionRef.current]); // missing of dependency is intended here
   return (
     <>
       {container}
@@ -267,6 +279,7 @@ export default function TimePicker({
           <div className={styles['header-current-time']}>
             {selectedRange[1] !== null ? `${formatTime(selectedRange)[0]} - ${formatTime(selectedRange)[1]}` : onHoverRange ? `${formatTime(onHoverRange)[0]} - ${formatTime(onHoverRange)[1]}` : 'waiting for input'}
           </div>
+          <div className={styles.clear} onClick={() => handleClear()}>clear</div>
         </div>
         {/* prevent unneccessary scrollbar appears due to grid overlay */}
         <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10 }}>
@@ -288,7 +301,7 @@ TimePicker.propTypes = {
   setValue: propTypes.func.isRequired,
   size: propTypes.oneOf(['small', 'medium', 'big']),
   attachElement: propTypes.element.isRequired,
-  value: propTypes.instanceOf(moment).isRequired,
+  value: propTypes.arrayOf(propTypes.instanceOf(moment)).isRequired,
 };
 TimePicker.defaultProps = {
   zIndex: 1,
