@@ -3,18 +3,25 @@ import React, {
   useState, useCallback, useMemo, useRef, useEffect,
 } from 'react';
 import propTypes from 'prop-types';
-// eslint-disable-next-line import/no-unresolved
+import moment from 'moment';
 import styles from 'static/index.less';
-// eslint-disable-next-line import/no-unresolved
 import hint from 'static/hint.svg';
+import time from 'static/time-circle-fill.svg';
+import { formatTime } from 'utils';
 
 export default function TimePicker({
-  size, zIndex, setTime, title, attachElement, maxHeight, maxWidth, position,
+  size, zIndex, setValue, attachElement, maxHeight, maxWidth, position, value,
 }) {
   const [selectedRange, setSelectedRange] = useState([null, null]);
+  const [onHoverRange, setOnHoverRange] = useState();
   const [visible, setVisible] = useState(false);
   const ref = useRef(null);
   const positionRef = useRef(null);
+  const crossDays = useMemo(() => {
+    const beginDay = value[0].day();
+    const endDay = value[1].day();
+    return !(beginDay === endDay);
+  }, [value]);
   const container = useMemo(() => React.cloneElement(attachElement, { onClick: () => setVisible(true), ref: positionRef }), [attachElement]);
   const width = useMemo(() => {
     switch (size) {
@@ -86,7 +93,7 @@ export default function TimePicker({
     position === 'right'
   && (result = `${hitArea.right}px`);
     return result;
-  }, [positionRef.current]);
+  }, [maxWidth, position, width, positionRef.current]);
 
   const containerTop = useMemo(() => {
     if (!positionRef.current) return;
@@ -100,7 +107,7 @@ export default function TimePicker({
     position === 'bottom'
   && (result = `${hitArea.bottom}px`);
     return result;
-  }, [positionRef.current]);
+  }, [height, maxHeight, position, positionRef.current]);
 
   const handleCellClick = useCallback((e) => {
     e.preventDefault();
@@ -127,28 +134,36 @@ export default function TimePicker({
         first = cover.shift();
         last = cover.pop();
       } else if (Number.parseInt(nextSelectedCell[1], 10) < Number.parseInt(nextSelectedCell[0], 10)) {
-        cover = [...ref.current.children].slice(indexOffSet, indexOffSet + Number.parseInt(nextSelectedCell[1], 10))
-          .concat([...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1, [...ref.current.children].length));
-        first = [...ref.current.children][indexOffSet + Number.parseInt(nextSelectedCell[1], 10)];
-        last = [...ref.current.children][indexOffSet + Number.parseInt(selectedRange[0], 10)];
+        cover = crossDays ? [...ref.current.children].slice(indexOffSet, indexOffSet + Number.parseInt(nextSelectedCell[1], 10))
+          .concat([...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1, [...ref.current.children].length))
+          : [...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[1], 10), indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1);
+        first = crossDays ? [...ref.current.children][indexOffSet + Number.parseInt(nextSelectedCell[1], 10)] : cover.shift();
+        last = crossDays ? [...ref.current.children][indexOffSet + Number.parseInt(selectedRange[0], 10)] : cover.pop();
+        if (!crossDays) {
+          const temp = nextSelectedCell[0];
+          // eslint-disable-next-line prefer-destructuring
+          nextSelectedCell[0] = nextSelectedCell[1];
+          nextSelectedCell[1] = temp;
+        }
       } else {
         cover = [];
         first = last = {};
       }
       first.className = last.className = styles['cell-selected'];
       cover.forEach((cell) => cell.className = styles['cell-included']);
+      const [begin, end] = formatTime(nextSelectedCell);
+      const beginMoment = moment(value[0]);
+      const endMoment = moment(value[1]);
+      beginMoment.hour(begin.split(':')[0]).minute(begin.split(':')[1]);
+      endMoment.hour(end.split(':')[0]).minute(end.split(':')[1]);
+      setValue([beginMoment, endMoment]);
       setVisible(false);
     } else {
       nextSelectedCell[0] = target.dataset.id;
       target.className = styles['cell-selected'];
     }
     setSelectedRange(nextSelectedCell);
-    const beginRes = Number.parseInt(nextSelectedCell[0], 10);
-    const endRes = Number.parseInt(nextSelectedCell[1], 10);
-    const begin = beginRes >= 0 ? `${Math.floor(beginRes / 60)}:${beginRes % 60 < 10 ? '0'.concat(beginRes % 60) : beginRes % 60}` : '';
-    const end = endRes >= 0 ? `${Math.floor(endRes / 60)}:${endRes % 60 < 10 ? '0'.concat(endRes % 60) : endRes % 60}` : '';
-    setTime(`${begin}-${end}`);
-  }, [selectedRange, index]);
+  }, [index.length, selectedRange, value, setValue, crossDays]);
 
   const handleHoverHighLight = useCallback((e, flag) => {
     e.preventDefault();
@@ -159,16 +174,19 @@ export default function TimePicker({
     const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(e.target.dataset.id / 60)];
     highLightColumnIndex.className = highLightRowIndex.className = flag ? styles['index-hover'] : styles.index;
     if (selectedRange[0] !== null && selectedRange[1] === null) {
+      flag && setOnHoverRange([selectedRange[0], e.target.dataset.id]);
       let cover = [];
       if (Number.parseInt(e.target.dataset.id, 10) > Number.parseInt(selectedRange[0], 10)) {
         cover = [...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, indexOffset + Number.parseInt(e.target.dataset.id, 10));
       } else if (Number.parseInt(e.target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
-        cover = [...ref.current.children].slice(indexOffset, indexOffset + Number.parseInt(e.target.dataset.id, 10))
-          .concat([...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, [...ref.current.children].length));
+        cover = crossDays ? [...ref.current.children].slice(indexOffset, indexOffset + Number.parseInt(e.target.dataset.id, 10))
+          .concat([...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, [...ref.current.children].length))
+          : [...ref.current.children].slice(indexOffset + Number.parseInt(e.target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
+        !crossDays && setOnHoverRange([e.target.dataset.id, selectedRange[0]]);
       } else cover = [];
       cover.forEach((cell) => cell.className = flag ? styles['cell-included'] : styles.cell);
     }
-  }, [selectedRange, index]);
+  }, [selectedRange, index, setOnHoverRange, crossDays]);
 
   const timePoint = useMemo(() => {
     const arr = [];
@@ -193,12 +211,37 @@ export default function TimePicker({
   useEffect(() => {
     let clear;
     document.addEventListener('click', clear = (e) => {
-      if (!ref.current.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
+      if (ref.current && !ref.current.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
     });
+    if (ref.current) {
+      const indexOffSet = index.length;
+      let cover; let first; let last;
+      const defaultBegin = value[0].hour() * 60 + value[0].minute();
+      const defaultEnd = value[1].hour() * 60 + value[1].minute();
+      if (defaultBegin < defaultEnd) {
+        cover = [...ref.current.children].slice(indexOffSet + defaultBegin, indexOffSet + defaultEnd + 1);
+        first = cover.shift();
+        last = cover.pop();
+      } else if (defaultBegin > defaultEnd && crossDays) {
+        cover = [...ref.current.children].slice(indexOffSet, indexOffSet + defaultEnd)
+          .concat([...ref.current.children].slice(indexOffSet + defaultBegin + 1, [...ref.current.children].length));
+        first = [...ref.current.children][indexOffSet + defaultEnd];
+        last = [...ref.current.children][indexOffSet + defaultBegin];
+      } else if (defaultBegin === defaultEnd) {
+        cover = [];
+        first = last = [...ref.current.children][indexOffSet + defaultBegin];
+      } else {
+        throw (new Error('arguments error!'));
+      }
+      first.className = last.className = styles['cell-selected'];
+      cover.forEach((cell) => cell.className = styles['cell-included']);
+      setSelectedRange([defaultBegin, defaultEnd]);
+    }
     return () => {
       document.removeEventListener('click', clear);
     };
-  }, []);
+    // TODO why ref.current don't work here?
+  }, [crossDays, index.length, value, positionRef.current]);
   return (
     <>
       {container}
@@ -217,7 +260,14 @@ export default function TimePicker({
           display: `${visible ? 'block' : 'none'}`,
         }}
       >
-        <div className={styles.header}>{title}</div>
+        <div className={styles.header}>
+          <div className={styles['header-icon']}>
+            <img src={time} alt="time-picker" />
+          </div>
+          <div className={styles['header-current-time']}>
+            {selectedRange[1] !== null ? `${formatTime(selectedRange)[0]} - ${formatTime(selectedRange)[1]}` : onHoverRange ? `${formatTime(onHoverRange)[0]} - ${formatTime(onHoverRange)[1]}` : 'waiting for input'}
+          </div>
+        </div>
         {/* prevent unneccessary scrollbar appears due to grid overlay */}
         <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10 }}>
           {index.concat(timePoint)}
@@ -235,16 +285,15 @@ TimePicker.propTypes = {
   maxWidth: propTypes.number,
   maxHeight: propTypes.number,
   position: propTypes.oneOf(['top', 'right', 'bottom', 'left']),
-  setTime: propTypes.func.isRequired,
+  setValue: propTypes.func.isRequired,
   size: propTypes.oneOf(['small', 'medium', 'big']),
-  title: propTypes.string,
   attachElement: propTypes.element.isRequired,
+  value: propTypes.instanceOf(moment).isRequired,
 };
 TimePicker.defaultProps = {
   zIndex: 1,
   maxWidth: undefined,
   maxHeight: undefined,
   size: 'medium',
-  title: 'react time picker',
   position: 'bottom',
 };

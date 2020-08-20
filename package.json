@@ -15,6 +15,7 @@
   "author": "honmameiko",
   "license": "MIT",
   "dependencies": {
+    "moment": "^2.27.0",
     "prop-types": "^15.7.2"
   },
   "devDependencies": {

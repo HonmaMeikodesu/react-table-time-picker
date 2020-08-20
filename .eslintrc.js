@@ -5,6 +5,7 @@ module.exports = {
   },
   extends: [
     'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
     'airbnb',
   ],
   parserOptions: {
@@ -28,5 +29,7 @@ module.exports = {
     'no-multi-assign': 0,
     'jsx-a11y/click-events-have-key-events': 0,
     'jsx-a11y/no-static-element-interactions': 0,
+    'import/no-unresolved': 0,
+    'react-hooks/exhaustive-deps': 1,
   },
 };
