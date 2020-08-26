@@ -9,11 +9,15 @@ import hint from 'static/hint.svg';
 import time from 'static/time-circle-fill.svg';
 import { formatTime } from 'utils';
 
+const styleSheetUUID = 'e313afea-95c8-4227-812f-7606571bd6a6';
+
 export default function TimePicker({
   size, zIndex, setValue, attachElement, maxHeight, maxWidth, position, value,
+  originColor, includedColor, selectedColor,
 }) {
   const [selectedRange, setSelectedRange] = useState([null, null]);
   const [onHoverRange, setOnHoverRange] = useState();
+  const [showConfirm, setShowConfirm] = useState(false);
   const [visible, setVisible] = useState(false);
   const ref = useRef(null);
   const positionRef = useRef(null);
@@ -114,31 +118,32 @@ export default function TimePicker({
     const { target } = e;
     const indexOffSet = index.length;
     let nextSelectedCell = selectedRange.map((v) => v);
+    const childrenList = [...ref.current.children];
     if (selectedRange[0] !== null && selectedRange[1] !== null) {
       nextSelectedCell = [null, null];
       nextSelectedCell[0] = target.dataset.id;
       let recover = [];
       if (Number.parseInt(selectedRange[0], 10) < Number.parseInt(selectedRange[1], 10)) {
-        recover = [...ref.current.children].slice(indexOffSet + Number.parseInt(selectedRange[0], 10), indexOffSet + Number.parseInt(selectedRange[1], 10) + 1);
+        recover = childrenList.slice(indexOffSet + Number.parseInt(selectedRange[0], 10), indexOffSet + Number.parseInt(selectedRange[1], 10) + 1);
       } else if (Number.parseInt(selectedRange[0], 10) > Number.parseInt(selectedRange[1], 10)) {
-        recover = [...ref.current.children].slice(indexOffSet, indexOffSet + Number.parseInt(selectedRange[1], 10) + 1)
-          .concat([...ref.current.children].slice(indexOffSet + Number.parseInt(selectedRange[0], 10), [...ref.current.children].length));
-      } else recover = [[...ref.current.children][indexOffSet + Number.parseInt(selectedRange[0], 10)]];
+        recover = childrenList.slice(indexOffSet, indexOffSet + Number.parseInt(selectedRange[1], 10) + 1)
+          .concat(childrenList.slice(indexOffSet + Number.parseInt(selectedRange[0], 10), childrenList.length));
+      } else recover = [childrenList[indexOffSet + Number.parseInt(selectedRange[0], 10)]];
       recover.forEach((cell) => cell.className = styles.cell);
       target.className = styles['cell-selected'];
     } else if (selectedRange[0] !== null) {
       nextSelectedCell[1] = target.dataset.id;
       let cover; let first; let last;
       if (Number.parseInt(nextSelectedCell[1], 10) > Number.parseInt(nextSelectedCell[0], 10)) {
-        cover = [...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10), indexOffSet + Number.parseInt(nextSelectedCell[1], 10) + 1);
+        cover = childrenList.slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10), indexOffSet + Number.parseInt(nextSelectedCell[1], 10) + 1);
         first = cover.shift();
         last = cover.pop();
       } else if (Number.parseInt(nextSelectedCell[1], 10) < Number.parseInt(nextSelectedCell[0], 10)) {
-        cover = crossDays ? [...ref.current.children].slice(indexOffSet, indexOffSet + Number.parseInt(nextSelectedCell[1], 10))
-          .concat([...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1, [...ref.current.children].length))
-          : [...ref.current.children].slice(indexOffSet + Number.parseInt(nextSelectedCell[1], 10), indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1);
-        first = crossDays ? [...ref.current.children][indexOffSet + Number.parseInt(nextSelectedCell[1], 10)] : cover.shift();
-        last = crossDays ? [...ref.current.children][indexOffSet + Number.parseInt(selectedRange[0], 10)] : cover.pop();
+        cover = crossDays ? childrenList.slice(indexOffSet, indexOffSet + Number.parseInt(nextSelectedCell[1], 10))
+          .concat(childrenList.slice(indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1, childrenList.length))
+          : childrenList.slice(indexOffSet + Number.parseInt(nextSelectedCell[1], 10), indexOffSet + Number.parseInt(nextSelectedCell[0], 10) + 1);
+        first = crossDays ? childrenList[indexOffSet + Number.parseInt(nextSelectedCell[1], 10)] : cover.shift();
+        last = crossDays ? childrenList[indexOffSet + Number.parseInt(selectedRange[0], 10)] : cover.pop();
         if (!crossDays) {
           const temp = nextSelectedCell[0];
           // eslint-disable-next-line prefer-destructuring
@@ -157,7 +162,7 @@ export default function TimePicker({
       beginMoment.hour(begin.split(':')[0]).minute(begin.split(':')[1]);
       endMoment.hour(end.split(':')[0]).minute(end.split(':')[1]);
       setValue([beginMoment, endMoment]);
-      setVisible(false);
+      setShowConfirm(true);
     } else {
       nextSelectedCell[0] = target.dataset.id;
       target.className = styles['cell-selected'];
@@ -165,28 +170,51 @@ export default function TimePicker({
     setSelectedRange(nextSelectedCell);
   }, [index.length, selectedRange, value, setValue, crossDays]);
 
-  const handleHoverHighLight = useCallback((e, flag) => {
+  const handleHoverHighLight = useCallback((e) => {
     e.preventDefault();
     const indexOffset = index.length;
     const imgOffset = 1;
     const columnOffset = 60;
     const highLightColumnIndex = ref.current.children[imgOffset + (e.target.dataset.id % 60)];
     const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(e.target.dataset.id / 60)];
-    highLightColumnIndex.className = highLightRowIndex.className = flag ? styles['index-hover'] : styles.index;
+    highLightColumnIndex.className = highLightRowIndex.className = styles['index-hover'];
     if (selectedRange[0] !== null && selectedRange[1] === null) {
-      flag && setOnHoverRange([selectedRange[0], e.target.dataset.id]);
+      setOnHoverRange([selectedRange[0], e.target.dataset.id]);
       let cover = [];
+      let beginIdx;
+      let endIdx;
+      let recover = [];
+      const childrenList = [...ref.current.children];
       if (Number.parseInt(e.target.dataset.id, 10) > Number.parseInt(selectedRange[0], 10)) {
-        cover = [...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, indexOffset + Number.parseInt(e.target.dataset.id, 10));
+        beginIdx = indexOffset + Number.parseInt(selectedRange[0], 10) + 1;
+        endIdx = indexOffset + Number.parseInt(e.target.dataset.id, 10);
+        recover = childrenList.slice(indexOffset, beginIdx - 1)
+          .concat(childrenList.slice(endIdx, childrenList.length));
+        cover = childrenList.slice(beginIdx, endIdx);
       } else if (Number.parseInt(e.target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
-        cover = crossDays ? [...ref.current.children].slice(indexOffset, indexOffset + Number.parseInt(e.target.dataset.id, 10))
-          .concat([...ref.current.children].slice(indexOffset + Number.parseInt(selectedRange[0], 10) + 1, [...ref.current.children].length))
-          : [...ref.current.children].slice(indexOffset + Number.parseInt(e.target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
+        beginIdx = indexOffset + Number.parseInt(selectedRange[0], 10) + 1;
+        endIdx = indexOffset + Number.parseInt(e.target.dataset.id, 10);
+        recover = crossDays ? childrenList.slice(endIdx, beginIdx - 1)
+          : childrenList.slice(indexOffset, endIdx)
+            .concat(childrenList.slice(beginIdx, childrenList.length));
+        cover = crossDays ? childrenList.slice(indexOffset, endIdx)
+          .concat(childrenList.slice(beginIdx, childrenList.length))
+          : childrenList.slice(indexOffset + Number.parseInt(e.target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
         !crossDays && setOnHoverRange([e.target.dataset.id, selectedRange[0]]);
       } else cover = [];
-      cover.forEach((cell) => cell.className = flag ? styles['cell-included'] : styles.cell);
+      cover.forEach((cell) => cell.className !== styles['cell-included'] && (cell.className = styles['cell-included']));
+      recover.forEach((cell) => cell.className !== styles.cell && (cell.className = styles.cell));
     }
   }, [selectedRange, index, setOnHoverRange, crossDays]);
+
+  const handleBlur = useCallback((e) => {
+    e.preventDefault();
+    const imgOffset = 1;
+    const columnOffset = 60;
+    const highLightColumnIndex = ref.current.children[imgOffset + (e.target.dataset.id % 60)];
+    const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(e.target.dataset.id / 60)];
+    highLightColumnIndex.className = highLightRowIndex.className = styles.index;
+  });
 
   const handleClear = useCallback(() => {
     setSelectedRange([null, null]);
@@ -197,7 +225,7 @@ export default function TimePicker({
     endMoment.hour(0).minute(0);
     setValue([beginMoment, endMoment]);
     const indexOffSet = index.length;
-    [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell)
+    [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell);
   }, [setValue, value]);
 
   const timePoint = useMemo(() => {
@@ -211,8 +239,8 @@ export default function TimePicker({
             data-tooltip={`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
             data-id={i * 60 + j}
             onClick={handleCellClick}
-            onMouseEnter={(e) => handleHoverHighLight(e, true)}
-            onMouseLeave={(e) => handleHoverHighLight(e)}
+            onMouseEnter={(e) => handleHoverHighLight(e)}
+            onMouseLeave={(e) => handleBlur(e)}
           />,
         );
       }
@@ -223,25 +251,26 @@ export default function TimePicker({
   useEffect(() => {
     let clear;
     document.addEventListener('click', clear = (e) => {
-      if (ref.current && !ref.current.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
+      if (ref.current && !ref.current.parentNode.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
     });
     if (ref.current) {
       const indexOffSet = index.length;
       let cover; let first; let last;
       const defaultBegin = value[0].hour() * 60 + value[0].minute();
       const defaultEnd = value[1].hour() * 60 + value[1].minute();
+      const childrenList = [...ref.current.children];
       if (defaultBegin < defaultEnd) {
-        cover = [...ref.current.children].slice(indexOffSet + defaultBegin, indexOffSet + defaultEnd + 1);
+        cover = childrenList.slice(indexOffSet + defaultBegin, indexOffSet + defaultEnd + 1);
         first = cover.shift();
         last = cover.pop();
       } else if (defaultBegin > defaultEnd && crossDays) {
-        cover = [...ref.current.children].slice(indexOffSet, indexOffSet + defaultEnd)
-          .concat([...ref.current.children].slice(indexOffSet + defaultBegin + 1, [...ref.current.children].length));
-        first = [...ref.current.children][indexOffSet + defaultEnd];
-        last = [...ref.current.children][indexOffSet + defaultBegin];
+        cover = childrenList.slice(indexOffSet, indexOffSet + defaultEnd)
+          .concat(childrenList.slice(indexOffSet + defaultBegin + 1, childrenList.length));
+        first = childrenList[indexOffSet + defaultEnd];
+        last = childrenList[indexOffSet + defaultBegin];
       } else if (defaultBegin === defaultEnd) {
         cover = [];
-        first = last = [...ref.current.children][indexOffSet + defaultBegin];
+        first = last = childrenList[indexOffSet + defaultBegin];
       } else {
         throw (new Error('arguments error!'));
       }
@@ -254,6 +283,20 @@ export default function TimePicker({
     };
     // TODO why ref.current don't work here?
   }, [positionRef.current]); // missing of dependency is intended here
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.setAttribute('id', 'e313afea-95c8-4227-812f-7606571bd6a6');
+    document.body.appendChild(style);
+    style.sheet.insertRule(`:root {
+    --cell-${styleSheetUUID}: ${originColor};
+    --cell-included-${styleSheetUUID}: ${includedColor};
+    --cell-selected-${styleSheetUUID}: ${selectedColor};
+    );
+    }`);
+    return () => {
+      document.getElementById('e313afea-95c8-4227-812f-7606571bd6a6').remove();
+    };
+  }, []);
   return (
     <>
       {container}
@@ -285,6 +328,19 @@ export default function TimePicker({
         <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10 }}>
           {index.concat(timePoint)}
         </div>
+        <div className={styles.mask} style={{ display: showConfirm ? 'block' : 'none' }}>
+          <div className={styles.confirm}>
+            <div className={styles['confirm-time']}>
+              <div>
+                {`${value[0].format('HH:mm')} - ${value[1].format('HH:mm')}`}
+              </div>
+            </div>
+            <div className={styles['confirm-select']}>
+              <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); }}>Yes</button>
+              <button type="button" className={styles['confirm-no']} onClick={() => { setShowConfirm(false); }}>No</button>
+            </div>
+          </div>
+        </div>
       </div>
       )}
 
@@ -302,6 +358,9 @@ TimePicker.propTypes = {
   size: propTypes.oneOf(['small', 'medium', 'big']),
   attachElement: propTypes.element.isRequired,
   value: propTypes.arrayOf(propTypes.instanceOf(moment)).isRequired,
+  originColor: propTypes.string,
+  includedColor: propTypes.string,
+  selectedColor: propTypes.string,
 };
 TimePicker.defaultProps = {
   zIndex: 1,
@@ -309,4 +368,7 @@ TimePicker.defaultProps = {
   maxHeight: undefined,
   size: 'medium',
   position: 'bottom',
+  originColor: '#66ccff',
+  includedColor: 'rgba(102, 204, 255, 0.5)',
+  selectedColor: '#458bad',
 };

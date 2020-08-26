@@ -5,7 +5,7 @@ import moment from 'moment';
 import TimePicker from 'components/time-picker';
 
 function App() {
-  const [time, setTime] = useState([moment(), moment()]);
+  const [time, setTime] = useState([moment().hour(5), moment()]);
   return (
     <div>
       <TimePicker
@@ -15,6 +15,9 @@ function App() {
         maxHeight={400}
         size="small"
         value={time}
+        // originColor='red'
+        // selectedColor='blue'
+        // includedColor='black'
         attachElement={(
           <input
             readOnly
@@ -24,7 +27,7 @@ function App() {
             value={`${time[0].format('MM-DD HH:mm')} ~ ${time[1].format('MM-DD HH:mm')}`}
             placeholder="input"
           />
-)}
+        )}
       />
     </div>
   );

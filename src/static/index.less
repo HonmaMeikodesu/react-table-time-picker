@@ -1,9 +1,6 @@
 @column-num: 61;
 @row-num: 25;
 @gap-size: 0px;
-@cell: #66ccff;
-@cell-included: rgba(102, 204, 255, 0.5);
-@cell-selected: #458bad;
 @tooltip-bg: #000;
 @tooltip-font-color: #fff;
 @border-color: #f0f0f0;
@@ -22,6 +19,7 @@
     border-radius: 4px;
     position: fixed;
     overflow: auto;
+    will-change: opacity; // spawn a new graphic layer
     background-color: @time-picker-bg;
     .header {
         flex: 0;
@@ -69,13 +67,13 @@
         .cell {
             box-sizing: border-box;
             border: 1px solid @cell-border-color;
-            background-color: @cell;
+            background-color: var(--cell-e313afea-95c8-4227-812f-7606571bd6a6);
             width: 100%;
             height: 100%;
             position: relative;
             cursor: pointer; 
             &:hover {
-                background-color: @cell-selected;
+                background-color: var(--cell-selected-e313afea-95c8-4227-812f-7606571bd6a6);
             }
             &::before {
                 visibility: hidden;
@@ -121,7 +119,7 @@
         }
         .cell-selected {
             .cell();
-            background-color: @cell-selected;
+            background-color: var(--cell-selected-e313afea-95c8-4227-812f-7606571bd6a6);
             &::before {
                 visibility: visible;
                 opacity: 1;
@@ -133,7 +131,43 @@
         }
         .cell-included {
             .cell();
-            background-color: @cell-included;
+            background-color: var(--cell-included-e313afea-95c8-4227-812f-7606571bd6a6);
+        }
+    }
+    .mask {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background-color: rgba(1, 1, 1, 0.6);
+        .confirm {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            height: 40%;
+            background-color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            .confirm-time {
+                flex: 1;
+                font-weight: bold;
+                font-size: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .confirm-select {
+                display: flex;
+                justify-content: flex-end;
+                margin-right: 10px;
+                margin-bottom: 10px;
+                & > button {
+                    margin: 0 5px;
+                } 
+            }
         }
     }
 }
