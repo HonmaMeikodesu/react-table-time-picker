@@ -12,6 +12,8 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'index.js',
+    libraryTarget: 'umd',
+    libraryExport: 'default',
   },
   module: {
     rules: [
@@ -39,14 +41,14 @@ module.exports = {
         }],
       },
       {
-        test: /\.(png|jp(e*)g|svg|gif)$/,
+        test: /\.(png|jpg|gif|svg)$/,
         use: [{
-          loader: 'file-loader',
+          loader: 'url-loader',
           options: {
-            name: 'images/[hash]-[name].[ext]',
+            name: './images/[name].[ext]',
+            limit: 102400,
           },
-        },
-        ],
+        }],
       },
     ],
   },
@@ -54,6 +56,20 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.jsx', '.less'],
     modules: [path.resolve(__dirname, 'src'), 'node_modules'],
+  },
+  externals: process.env.NODE_ENV === 'dev' ? {} : {
+    react: {
+      root: 'React',
+      commonjs2: 'react',
+      commonjs: 'react',
+      amd: 'react',
+    },
+    'react-dom': {
+      root: 'ReactDOM',
+      commonjs2: 'react-dom',
+      commonjs: 'react-dom',
+      amd: 'react-dom',
+    },
   },
   devServer: {
     port: 3001,

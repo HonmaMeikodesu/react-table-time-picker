@@ -1,6 +1,6 @@
 {
   "name": "react-table-timepicker",
-  "version": "0.0.2",
+  "version": "0.0.6",
   "description": "Time picker represented in table form powered by React",
   "main": "dist/index.js",
   "scripts": {
@@ -34,7 +34,6 @@
     "eslint-plugin-jsx-a11y": "^6.3.1",
     "eslint-plugin-react": "^7.20.6",
     "eslint-plugin-react-hooks": "^4.1.0",
-    "file-loader": "^6.0.0",
     "html-webpack-plugin": "^4.3.0",
     "less-loader": "^6.2.0",
     "postcss-import": "^12.0.1",
@@ -43,6 +42,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "style-loader": "^1.2.1",
+    "url-loader": "^4.1.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"
