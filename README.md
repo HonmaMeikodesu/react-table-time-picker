@@ -1,4 +1,4 @@
-# react-table-time-picker
+# react-table-timepicker
 
 ![](https://i.loli.net/2020/08/27/p2PgHQXD5a9JoTm.jpg)
 
@@ -6,10 +6,15 @@
 
 Time picker represented in table form
 
+# Dependencies
+
+- React.JS
+- Moment.JS
+
 # Installation
 
 ``` bash
-npm run install --save react-table-time-picker
+npm run install --save react-table-timepicker
 ```
 
 # Usage
@@ -18,7 +23,7 @@ npm run install --save react-table-time-picker
 import React, { useState } from 'react';
 import { render } from 'react-dom';
 import moment from 'moment';
-import TimePicker from 'react-table-time-picker';
+import TimePicker from 'react-table-timepicker';
 
 function App() {
   const [time, setTime] = useState([moment(), moment()]);
