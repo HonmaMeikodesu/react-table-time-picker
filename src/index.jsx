@@ -5,7 +5,7 @@ import moment from 'moment';
 import TimePicker from 'components/time-picker';
 
 function App() {
-  const [time, setTime] = useState([moment().hour(5), moment()]);
+  const [time, setTime] = useState([moment(), moment()]);
   return (
     <div>
       <TimePicker

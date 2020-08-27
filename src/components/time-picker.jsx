@@ -7,20 +7,24 @@ import moment from 'moment';
 import styles from 'static/index.less';
 import hint from 'static/hint.svg';
 import time from 'static/time-circle-fill.svg';
+import info from 'static/info-circle.svg';
 import { formatTime } from 'utils';
 
 const styleSheetUUID = 'e313afea-95c8-4227-812f-7606571bd6a6';
 
 export default function TimePicker({
   size, zIndex, setValue, attachElement, maxHeight, maxWidth, position, value,
-  originColor, includedColor, selectedColor,
+  originColor, includedColor, selectedColor, confirmModal,
 }) {
   const [selectedRange, setSelectedRange] = useState([null, null]);
   const [onHoverRange, setOnHoverRange] = useState();
   const [showConfirm, setShowConfirm] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [pickerBlur, setPickerBlur] = useState('');
   const ref = useRef(null);
   const positionRef = useRef(null);
+  const maskRef = useRef(null);
+  const timePickerRef = useRef(null);
   const crossDays = useMemo(() => {
     const beginDay = value[0].day();
     const endDay = value[1].day();
@@ -162,13 +166,18 @@ export default function TimePicker({
       beginMoment.hour(begin.split(':')[0]).minute(begin.split(':')[1]);
       endMoment.hour(end.split(':')[0]).minute(end.split(':')[1]);
       setValue([beginMoment, endMoment]);
-      setShowConfirm(true);
+      if (confirmModal) {
+        setShowConfirm(true);
+        setPickerBlur('blur(2px)');
+        maskRef.current.style.width = timePickerRef.current.scrollWidth;
+        maskRef.current.style.height = timePickerRef.current.scrollHeight;
+      }
     } else {
       nextSelectedCell[0] = target.dataset.id;
       target.className = styles['cell-selected'];
     }
     setSelectedRange(nextSelectedCell);
-  }, [index.length, selectedRange, value, setValue, crossDays]);
+  }, [index.length, selectedRange, value, setValue, crossDays, confirmModal]);
 
   const handleHoverHighLight = useCallback((e) => {
     e.preventDefault();
@@ -214,7 +223,7 @@ export default function TimePicker({
     const highLightColumnIndex = ref.current.children[imgOffset + (e.target.dataset.id % 60)];
     const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(e.target.dataset.id / 60)];
     highLightColumnIndex.className = highLightRowIndex.className = styles.index;
-  });
+  }, []);
 
   const handleClear = useCallback(() => {
     setSelectedRange([null, null]);
@@ -226,7 +235,7 @@ export default function TimePicker({
     setValue([beginMoment, endMoment]);
     const indexOffSet = index.length;
     [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell);
-  }, [setValue, value]);
+  }, [index.length, setValue, value]);
 
   const timePoint = useMemo(() => {
     const arr = [];
@@ -246,7 +255,7 @@ export default function TimePicker({
       }
     }
     return arr;
-  }, [handleCellClick, handleHoverHighLight]);
+  }, [handleBlur, handleCellClick, handleHoverHighLight]);
 
   useEffect(() => {
     let clear;
@@ -303,6 +312,7 @@ export default function TimePicker({
       {positionRef.current && (
       <div
         className={styles['time-picker-wrapper']}
+        ref={timePickerRef}
         style={{
           zIndex,
           fontSize,
@@ -315,7 +325,7 @@ export default function TimePicker({
           display: `${visible ? 'block' : 'none'}`,
         }}
       >
-        <div className={styles.header}>
+        <div className={styles.header} style={{ filter: pickerBlur }}>
           <div className={styles['header-icon']}>
             <img src={time} alt="time-picker" />
           </div>
@@ -325,22 +335,39 @@ export default function TimePicker({
           <div className={styles.clear} onClick={() => handleClear()}>clear</div>
         </div>
         {/* prevent unneccessary scrollbar appears due to grid overlay */}
-        <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10 }}>
+        <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10, filter: pickerBlur }}>
           {index.concat(timePoint)}
         </div>
-        <div className={styles.mask} style={{ display: showConfirm ? 'block' : 'none' }}>
-          <div className={styles.confirm}>
-            <div className={styles['confirm-time']}>
-              <div>
-                {`${value[0].format('HH:mm')} - ${value[1].format('HH:mm')}`}
+        {
+          confirmModal && (
+            <div
+              className={styles.mask}
+              ref={maskRef}
+              style={{
+                display: showConfirm ? 'block' : 'none',
+                fontSize,
+              }}
+            >
+              <div className={styles.confirm}>
+                <div className={styles['confirm-title']}>
+                  <div className={styles['confirm-title-image']}>
+                    <img src={info} alt="" />
+                  </div>
+                  <div className={styles['confirm-title-hint']}>Confirm</div>
+                </div>
+                <div className={styles['confirm-time']}>
+                  <div>
+                    {`${value[0].format('HH:mm')} - ${value[1].format('HH:mm')}`}
+                  </div>
+                </div>
+                <div className={styles['confirm-select']}>
+                  <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); setPickerBlur(''); }}>Yes</button>
+                  <button type="button" className={styles['confirm-no']} onClick={() => { setShowConfirm(false); setPickerBlur(''); }}>No</button>
+                </div>
               </div>
             </div>
-            <div className={styles['confirm-select']}>
-              <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); }}>Yes</button>
-              <button type="button" className={styles['confirm-no']} onClick={() => { setShowConfirm(false); }}>No</button>
-            </div>
-          </div>
-        </div>
+          )
+        }
       </div>
       )}
 
@@ -361,6 +388,7 @@ TimePicker.propTypes = {
   originColor: propTypes.string,
   includedColor: propTypes.string,
   selectedColor: propTypes.string,
+  confirmModal: propTypes.bool,
 };
 TimePicker.defaultProps = {
   zIndex: 1,
@@ -371,4 +399,5 @@ TimePicker.defaultProps = {
   originColor: '#66ccff',
   includedColor: 'rgba(102, 204, 255, 0.5)',
   selectedColor: '#458bad',
+  confirmModal: true,
 };
