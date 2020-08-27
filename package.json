@@ -1,7 +1,7 @@
 {
-  "name": "react-matrix-time-picker",
+  "name": "react-table-time-picker",
   "version": "1.0.0",
-  "description": "a time picker that looks like a matrix in React",
+  "description": "Time picker represented in table form powered by React",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,7 +10,10 @@
   },
   "keywords": [
     "react",
-    "time-picker"
+    "time",
+    "timepicker",
+    "range",
+    "rangepicker"
   ],
   "author": "honmameiko",
   "license": "MIT",
