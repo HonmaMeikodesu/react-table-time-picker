@@ -169,8 +169,8 @@ export default function TimePicker({
       if (confirmModal) {
         setShowConfirm(true);
         setPickerBlur('blur(2px)');
-        maskRef.current.style.width = timePickerRef.current.scrollWidth;
-        maskRef.current.style.height = timePickerRef.current.scrollHeight;
+        maskRef.current.style.width = `${timePickerRef.current.scrollWidth}px`;
+        maskRef.current.style.height = `${timePickerRef.current.scrollHeight}px`;
       }
     } else {
       nextSelectedCell[0] = target.dataset.id;
@@ -305,7 +305,7 @@ export default function TimePicker({
     return () => {
       document.getElementById('e313afea-95c8-4227-812f-7606571bd6a6').remove();
     };
-  }, []);
+  }, [includedColor, originColor, selectedColor]);
   return (
     <>
       {container}
