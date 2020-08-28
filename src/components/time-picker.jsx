@@ -10,19 +10,22 @@ import time from 'static/time-circle-fill.svg';
 import info from 'static/info-circle.svg';
 import { formatTime } from 'utils';
 
-const styleSheetUUID = 'e313afea-95c8-4227-812f-7606571bd6a6';
+const ele = document.createElement('div');
+const eleStyle = ['absolute', '0px', '0px', '100%'];
+['position', 'left', 'top', 'width'].forEach((key, idx) => ele.style[key] = eleStyle[idx]);
+document.body.appendChild(ele);
 
 export default function TimePicker({
-  size, zIndex, setValue, attachElement, maxHeight, maxWidth, position, value,
-  originColor, includedColor, selectedColor, confirmModal,
+  size, zIndex, maxHeight, maxWidth, position,
+  confirmModal, positionRef, visible, setVisible, defaultValue, onValueChange,
 }) {
   const [selectedRange, setSelectedRange] = useState([null, null]);
   const [onHoverRange, setOnHoverRange] = useState();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [visible, setVisible] = useState(false);
   const [pickerBlur, setPickerBlur] = useState('');
+  const [value, setValue] = useState(defaultValue);
   const ref = useRef(null);
-  const positionRef = useRef(null);
+  const headerRef = useRef(null);
   const maskRef = useRef(null);
   const timePickerRef = useRef(null);
   const crossDays = useMemo(() => {
@@ -30,7 +33,6 @@ export default function TimePicker({
     const endDay = value[1].day();
     return !(beginDay === endDay);
   }, [value]);
-  const container = useMemo(() => React.cloneElement(attachElement, { onClick: () => setVisible(true), ref: positionRef }), [attachElement]);
   const width = useMemo(() => {
     switch (size) {
       case 'small':
@@ -90,7 +92,6 @@ export default function TimePicker({
   }, []);
 
   const containerLeft = useMemo(() => {
-    if (!positionRef.current) return;
     const hitArea = positionRef.current.getBoundingClientRect(); // scroll bar is not includingly calculated here
     const tweakWidth = maxWidth ? maxWidth < Number.parseInt(width, 10) ? maxWidth : Number.parseInt(width, 10) : Number.parseInt(width, 10);
     let result = null;
@@ -101,10 +102,9 @@ export default function TimePicker({
     position === 'right'
   && (result = `${hitArea.right}px`);
     return result;
-  }, [maxWidth, position, width, positionRef.current]);
+  }, [maxWidth, position, positionRef, width]);
 
   const containerTop = useMemo(() => {
-    if (!positionRef.current) return;
     const hitArea = positionRef.current.getBoundingClientRect();
     const tweakHeight = maxHeight ? maxHeight < Number.parseInt(height, 10) ? maxHeight : Number.parseInt(height, 10) : Number.parseInt(height, 10);
     let result = null;
@@ -115,7 +115,7 @@ export default function TimePicker({
     position === 'bottom'
   && (result = `${hitArea.bottom}px`);
     return result;
-  }, [height, maxHeight, position, positionRef.current]);
+  }, [height, maxHeight, position, positionRef]);
 
   const handleCellClick = useCallback((e) => {
     e.preventDefault();
@@ -166,6 +166,7 @@ export default function TimePicker({
       beginMoment.hour(begin.split(':')[0]).minute(begin.split(':')[1]);
       endMoment.hour(end.split(':')[0]).minute(end.split(':')[1]);
       setValue([beginMoment, endMoment]);
+      onValueChange([beginMoment, endMoment]);
       if (confirmModal) {
         setShowConfirm(true);
         setPickerBlur('blur(2px)');
@@ -177,7 +178,7 @@ export default function TimePicker({
       target.className = styles['cell-selected'];
     }
     setSelectedRange(nextSelectedCell);
-  }, [index.length, selectedRange, value, setValue, crossDays, confirmModal]);
+  }, [index.length, selectedRange, value, onValueChange, confirmModal, crossDays]);
 
   const handleHoverHighLight = useCallback((e) => {
     e.preventDefault();
@@ -233,9 +234,10 @@ export default function TimePicker({
     beginMoment.hour(0).minute(0);
     endMoment.hour(0).minute(0);
     setValue([beginMoment, endMoment]);
+    onValueChange([beginMoment, endMoment]);
     const indexOffSet = index.length;
     [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell);
-  }, [index.length, setValue, value]);
+  }, [index.length, onValueChange, value]);
 
   const timePoint = useMemo(() => {
     const arr = [];
@@ -260,144 +262,114 @@ export default function TimePicker({
   useEffect(() => {
     let clear;
     document.addEventListener('click', clear = (e) => {
-      if (ref.current && !ref.current.parentNode.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
+      if (!ref.current.parentNode.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
     });
-    if (ref.current) {
-      const indexOffSet = index.length;
-      let cover; let first; let last;
-      const defaultBegin = value[0].hour() * 60 + value[0].minute();
-      const defaultEnd = value[1].hour() * 60 + value[1].minute();
-      const childrenList = [...ref.current.children];
-      if (defaultBegin < defaultEnd) {
-        cover = childrenList.slice(indexOffSet + defaultBegin, indexOffSet + defaultEnd + 1);
-        first = cover.shift();
-        last = cover.pop();
-      } else if (defaultBegin > defaultEnd && crossDays) {
-        cover = childrenList.slice(indexOffSet, indexOffSet + defaultEnd)
-          .concat(childrenList.slice(indexOffSet + defaultBegin + 1, childrenList.length));
-        first = childrenList[indexOffSet + defaultEnd];
-        last = childrenList[indexOffSet + defaultBegin];
-      } else if (defaultBegin === defaultEnd) {
-        cover = [];
-        first = last = childrenList[indexOffSet + defaultBegin];
-      } else {
-        throw (new Error('arguments error!'));
-      }
-      first.className = last.className = styles['cell-selected'];
-      cover.forEach((cell) => cell.className = styles['cell-included']);
-      setSelectedRange([defaultBegin, defaultEnd]);
+    const indexOffSet = index.length;
+    let cover; let first; let last;
+    const defaultBegin = value[0].hour() * 60 + value[0].minute();
+    const defaultEnd = value[1].hour() * 60 + value[1].minute();
+    const childrenList = [...ref.current.children];
+    if (defaultBegin < defaultEnd) {
+      cover = childrenList.slice(indexOffSet + defaultBegin, indexOffSet + defaultEnd + 1);
+      first = cover.shift();
+      last = cover.pop();
+    } else if (defaultBegin > defaultEnd && crossDays) {
+      cover = childrenList.slice(indexOffSet, indexOffSet + defaultEnd)
+        .concat(childrenList.slice(indexOffSet + defaultBegin + 1, childrenList.length));
+      first = childrenList[indexOffSet + defaultEnd];
+      last = childrenList[indexOffSet + defaultBegin];
+    } else if (defaultBegin === defaultEnd) {
+      cover = [];
+      first = last = childrenList[indexOffSet + defaultBegin];
+    } else {
+      throw (new Error('arguments error!'));
     }
+    first.className = last.className = styles['cell-selected'];
+    cover.forEach((cell) => cell.className = styles['cell-included']);
+    setSelectedRange([defaultBegin, defaultEnd]);
     return () => {
       document.removeEventListener('click', clear);
     };
-    // TODO why ref.current don't work here?
-  }, [positionRef.current]); // missing of dependency is intended here
+  }, []); // missing of dependency is intended here
+
   useEffect(() => {
-    const style = document.createElement('style');
-    style.setAttribute('id', 'e313afea-95c8-4227-812f-7606571bd6a6');
-    document.body.appendChild(style);
-    style.sheet.insertRule(`:root {
-    --cell-${styleSheetUUID}: ${originColor};
-    --cell-included-${styleSheetUUID}: ${includedColor};
-    --cell-selected-${styleSheetUUID}: ${selectedColor};
-    );
-    }`);
-    return () => {
-      document.getElementById('e313afea-95c8-4227-812f-7606571bd6a6').remove();
-    };
-  }, [includedColor, originColor, selectedColor]);
+    visible && (headerRef.current.style.width = `${timePickerRef.current.scrollWidth}px`);
+  }, [visible]);
+
   return (
-    <>
-      {container}
-      {positionRef.current && (
+    <div
+      className={styles['time-picker-wrapper']}
+      ref={timePickerRef}
+      style={{
+        zIndex,
+        fontSize,
+        width,
+        height,
+        maxHeight: maxHeight ? `${maxHeight}px` : undefined,
+        maxWidth: maxWidth ? `${maxWidth}px` : undefined,
+        left: containerLeft,
+        top: containerTop,
+        display: `${visible ? 'block' : 'none'}`,
+      }}
+    >
+      <div className={styles.header} ref={headerRef} style={{ filter: pickerBlur }}>
+        <div className={styles['header-icon']}>
+          <img src={time} alt="time-picker" />
+        </div>
+        <div className={styles['header-current-time']}>
+          {selectedRange[1] !== null ? `${formatTime(selectedRange)[0]} - ${formatTime(selectedRange)[1]}` : onHoverRange ? `${formatTime(onHoverRange)[0]} - ${formatTime(onHoverRange)[1]}` : 'waiting for input'}
+        </div>
+        <div className={styles.clear} onClick={() => handleClear()}>clear</div>
+      </div>
+      {/* prevent unneccessary scrollbar appears due to grid overlay */}
+      <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10, filter: pickerBlur }}>
+        {index.concat(timePoint)}
+      </div>
+      {
+    confirmModal && (
       <div
-        className={styles['time-picker-wrapper']}
-        ref={timePickerRef}
+        className={styles.mask}
+        ref={maskRef}
         style={{
-          zIndex,
+          display: showConfirm ? 'block' : 'none',
           fontSize,
-          width,
-          height,
-          maxHeight: maxHeight ? `${maxHeight}px` : undefined,
-          maxWidth: maxWidth ? `${maxWidth}px` : undefined,
-          left: containerLeft,
-          top: containerTop,
-          display: `${visible ? 'block' : 'none'}`,
         }}
       >
-        <div className={styles.header} style={{ filter: pickerBlur }}>
-          <div className={styles['header-icon']}>
-            <img src={time} alt="time-picker" />
-          </div>
-          <div className={styles['header-current-time']}>
-            {selectedRange[1] !== null ? `${formatTime(selectedRange)[0]} - ${formatTime(selectedRange)[1]}` : onHoverRange ? `${formatTime(onHoverRange)[0]} - ${formatTime(onHoverRange)[1]}` : 'waiting for input'}
-          </div>
-          <div className={styles.clear} onClick={() => handleClear()}>clear</div>
-        </div>
-        {/* prevent unneccessary scrollbar appears due to grid overlay */}
-        <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10, filter: pickerBlur }}>
-          {index.concat(timePoint)}
-        </div>
-        {
-          confirmModal && (
-            <div
-              className={styles.mask}
-              ref={maskRef}
-              style={{
-                display: showConfirm ? 'block' : 'none',
-                fontSize,
-              }}
-            >
-              <div className={styles.confirm}>
-                <div className={styles['confirm-title']}>
-                  <div className={styles['confirm-title-image']}>
-                    <img src={info} alt="" />
-                  </div>
-                  <div className={styles['confirm-title-hint']}>Confirm</div>
-                </div>
-                <div className={styles['confirm-time']}>
-                  <div>
-                    {`${value[0].format('HH:mm')} - ${value[1].format('HH:mm')}`}
-                  </div>
-                </div>
-                <div className={styles['confirm-select']}>
-                  <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); setPickerBlur(''); }}>Yes</button>
-                  <button type="button" className={styles['confirm-no']} onClick={() => { setShowConfirm(false); setPickerBlur(''); }}>No</button>
-                </div>
-              </div>
+        <div className={styles.confirm}>
+          <div className={styles['confirm-title']}>
+            <div className={styles['confirm-title-image']}>
+              <img src={info} alt="" />
             </div>
-          )
-        }
+            <div className={styles['confirm-title-hint']}>Confirm</div>
+          </div>
+          <div className={styles['confirm-time']}>
+            <div>
+              {`${value[0].format('HH:mm')} - ${value[1].format('HH:mm')}`}
+            </div>
+          </div>
+          <div className={styles['confirm-select']}>
+            <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); setPickerBlur(''); }}>Yes</button>
+            <button type="button" className={styles['confirm-no']} onClick={() => { setShowConfirm(false); setPickerBlur(''); }}>No</button>
+          </div>
+        </div>
       </div>
-      )}
-
-    </>
-
+    )
+  }
+    </div>
   );
 }
 
 TimePicker.propTypes = {
-  zIndex: propTypes.number,
-  maxWidth: propTypes.number,
-  maxHeight: propTypes.number,
-  position: propTypes.oneOf(['top', 'right', 'bottom', 'left']),
-  setValue: propTypes.func.isRequired,
-  size: propTypes.oneOf(['small', 'medium', 'big']),
-  attachElement: propTypes.element.isRequired,
-  value: propTypes.arrayOf(propTypes.instanceOf(moment)).isRequired,
-  originColor: propTypes.string,
-  includedColor: propTypes.string,
-  selectedColor: propTypes.string,
-  confirmModal: propTypes.bool,
-};
-TimePicker.defaultProps = {
-  zIndex: 1,
-  maxWidth: undefined,
-  maxHeight: undefined,
-  size: 'medium',
-  position: 'bottom',
-  originColor: '#66ccff',
-  includedColor: 'rgba(102, 204, 255, 0.5)',
-  selectedColor: '#458bad',
-  confirmModal: true,
+  zIndex: propTypes.number.isRequired,
+  maxWidth: propTypes.number.isRequired,
+  maxHeight: propTypes.number.isRequired,
+  position: propTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
+  size: propTypes.oneOf(['small', 'medium', 'big']).isRequired,
+  confirmModal: propTypes.bool.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  positionRef: propTypes.object.isRequired,
+  visible: propTypes.bool.isRequired,
+  setVisible: propTypes.func.isRequired,
+  defaultValue: propTypes.arrayOf(propTypes.instanceOf(moment)).isRequired,
+  onValueChange: propTypes.func.isRequired,
 };

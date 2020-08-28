@@ -8,7 +8,7 @@ const htmlWebpackPlugin = new HtmlWebpackPlugin({
 });
 
 module.exports = {
-  entry: process.env.NODE_ENV === 'dev' ? path.join(__dirname, 'src/index.jsx') : process.env.NODE_ENV === 'prod' ? path.join(__dirname, 'src/components/time-picker.jsx') : path.join(__dirname, 'src/index.jsx'),
+  entry: process.env.NODE_ENV === 'dev' ? path.join(__dirname, 'src/index.jsx') : process.env.NODE_ENV === 'prod' ? path.join(__dirname, 'src/components/index.jsx') : path.join(__dirname, 'src/index.jsx'),
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'index.js',
@@ -52,7 +52,7 @@ module.exports = {
       },
     ],
   },
-  plugins: [htmlWebpackPlugin],
+  plugins: process.env.NODE_ENV === 'dev' ? [htmlWebpackPlugin] : [],
   resolve: {
     extensions: ['.js', '.jsx', '.less'],
     modules: [path.resolve(__dirname, 'src'), 'node_modules'],
@@ -70,6 +70,7 @@ module.exports = {
       commonjs: 'react-dom',
       amd: 'react-dom',
     },
+    moment: 'moment',
   },
   devServer: {
     port: 3001,

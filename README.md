@@ -1,4 +1,4 @@
-# react-table-timepicker
+# react-table-time-picker
 
 ![](https://i.loli.net/2020/08/27/p2PgHQXD5a9JoTm.jpg)
 
@@ -14,7 +14,7 @@ Time picker represented in table form
 # Installation
 
 ``` bash
-npm run install --save react-table-timepicker
+npm run install --save react-table-time-picker
 ```
 
 # Usage
@@ -23,7 +23,7 @@ npm run install --save react-table-timepicker
 import React, { useState } from 'react';
 import { render } from 'react-dom';
 import moment from 'moment';
-import TimePicker from 'react-table-timepicker';
+import TimePicker from 'react-table-time-picker';
 
 function App() {
   const [time, setTime] = useState([moment(), moment()]);
@@ -50,8 +50,8 @@ render(<App />, document.getElementById('root'));
 | maxWidth | Number | undefined | css max-width
 | maxHeight | Number | undefined | css max-height
 | position | ['top','right','bottom','left'] | medium | position of the time picker relative to its attach element
-| value | [moment(),moment()] | - | moment instance of begin time and end time
-| setValue | Function | - | function to set the value
+| defaultValue | [`moment`,`moment`] | [moment(), moment()] | moment instance of begin time and end time
+| onValueChange | Function | - | call back when both start time and end time are selected,two-tuple `[moment,moment]` which represents start and end time will be passed as arguments
 | size | ['small','medium','big'] | medium | size of the time picker
 | attachElement | HTMLElement | - | the attachment for the time picker
 | originColor | CSS Color | #66ccff | color of the table cell

@@ -1,12 +1,16 @@
 {
-  "name": "react-table-timepicker",
-  "version": "0.0.8",
+  "name": "react-table-time-picker",
+  "version": "0.0.1",
   "description": "Time picker represented in table form powered by React",
+  "private": false,
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "set NODE_ENV=dev&&webpack-dev-server --mode development",
     "build": "rm -rf dist/&&set NODE_ENV=prod&&webpack"
+  },
+  "repository": {
+    "url": "https://github.com/HonmaMeikodesu/react-table-time-picker"
   },
   "keywords": [
     "react",

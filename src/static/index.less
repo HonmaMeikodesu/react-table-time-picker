@@ -17,7 +17,7 @@
     box-shadow: 0 0 10px @border-shadow-color;
     border: 1px solid @border-color;
     border-radius: 4px;
-    position: fixed;
+    position: absolute;
     overflow: auto;
     will-change: opacity; // spawn a new graphic layer
     background-color: @time-picker-bg;
@@ -41,6 +41,8 @@
         .clear {
             flex: 0;
             font-size: 2em;
+            width: 2em;
+            padding-right: 0.5em;
             cursor: pointer;
             font-weight: inherit;
         }
