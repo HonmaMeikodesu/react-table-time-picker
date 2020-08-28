@@ -30,8 +30,6 @@ function App() {
   return (
     <div>
       <TimePicker
-        setValue={setTime}
-        value={time}
         attachElement={(
           <input />
         )}
