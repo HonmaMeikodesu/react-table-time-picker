@@ -89,27 +89,31 @@ export default function TimePicker({
   // TODO containerLeft will lose precision when scrolling
   const containerLeft = useMemo(() => {
     const hitArea = positionRef.current.getBoundingClientRect(); // scroll bar is not includingly calculated here
+    const tweakLeft = hitArea.left + window.scrollX;
+    const tweakRight = hitArea.right + window.scrollX;
     const tweakWidth = maxWidth ? maxWidth < Number.parseInt(width, 10) ? maxWidth : Number.parseInt(width, 10) : Number.parseInt(width, 10);
     let result = null;
     (position === 'top' || position === 'bottom')
-  && (result = `${(hitArea.left + hitArea.right) / 2 - Number.parseInt(tweakWidth, 10) / 2 > 0 ? ((hitArea.left + hitArea.right) / 2 - Number.parseInt(tweakWidth, 10) / 2) : 0}px`);
+  && (result = `${(tweakLeft + tweakRight) / 2 - Number.parseInt(tweakWidth, 10) / 2 > 0 ? ((tweakLeft + tweakRight) / 2 - Number.parseInt(tweakWidth, 10) / 2) : 0}px`);
     position === 'left'
-  && (result = `${hitArea.left - Number.parseInt(tweakWidth, 10) > 0 ? (hitArea.left - Number.parseInt(tweakWidth, 10)) : 0}px`);
+  && (result = `${tweakLeft - Number.parseInt(tweakWidth, 10) > 0 ? (tweakLeft - Number.parseInt(tweakWidth, 10)) : 0}px`);
     position === 'right'
-  && (result = `${hitArea.right}px`);
+  && (result = `${tweakRight}px`);
     return result;
   }, [maxWidth, position, positionRef, width]);
 
   const containerTop = useMemo(() => {
     const hitArea = positionRef.current.getBoundingClientRect();
+    const tweakTop = hitArea.top + window.scrollY;
+    const tweakBottom = hitArea.bottom + window.scrollY;
     const tweakHeight = maxHeight ? maxHeight < Number.parseInt(height, 10) ? maxHeight : Number.parseInt(height, 10) : Number.parseInt(height, 10);
     let result = null;
     (position === 'left' || position === 'right')
-  && (result = `${(hitArea.top + hitArea.bottom) / 2 - Number.parseInt(tweakHeight, 10) / 2 > 0 ? ((hitArea.top + hitArea.bottom) / 2 - Number.parseInt(tweakHeight, 10) / 2) : 0}px`);
+  && (result = `${(tweakTop + tweakBottom) / 2 - Number.parseInt(tweakHeight, 10) / 2 > 0 ? ((tweakTop + tweakBottom) / 2 - Number.parseInt(tweakHeight, 10) / 2) : 0}px`);
     position === 'top'
-  && (result = `${hitArea.top - Number.parseInt(tweakHeight, 10) > 0 ? (hitArea.top - Number.parseInt(tweakHeight, 10)) : 0}px`);
+  && (result = `${tweakTop - Number.parseInt(tweakHeight, 10) > 0 ? (tweakTop - Number.parseInt(tweakHeight, 10)) : 0}px`);
     position === 'bottom'
-  && (result = `${hitArea.bottom}px`);
+  && (result = `${tweakBottom}px`);
     return result;
   }, [height, maxHeight, position, positionRef]);
 

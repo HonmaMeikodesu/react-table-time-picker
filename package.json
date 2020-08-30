@@ -1,6 +1,6 @@
 {
   "name": "react-table-time-picker",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Time picker represented in table form powered by React",
   "private": false,
   "main": "dist/index.js",
