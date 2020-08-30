@@ -23,7 +23,8 @@
   "license": "MIT",
   "dependencies": {
     "moment": "^2.27.0",
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",

@@ -10,11 +10,6 @@ import time from 'static/time-circle-fill.svg';
 import info from 'static/info-circle.svg';
 import { formatTime } from 'utils';
 
-const ele = document.createElement('div');
-const eleStyle = ['absolute', '0px', '0px', '100%'];
-['position', 'left', 'top', 'width'].forEach((key, idx) => ele.style[key] = eleStyle[idx]);
-document.body.appendChild(ele);
-
 export default function TimePicker({
   size, zIndex, maxHeight, maxWidth, position,
   confirmModal, positionRef, visible, setVisible, defaultValue, onValueChange,
@@ -91,6 +86,7 @@ export default function TimePicker({
     return logo.concat(column, row);
   }, []);
 
+  // TODO containerLeft will lose precision when scrolling
   const containerLeft = useMemo(() => {
     const hitArea = positionRef.current.getBoundingClientRect(); // scroll bar is not includingly calculated here
     const tweakWidth = maxWidth ? maxWidth < Number.parseInt(width, 10) ? maxWidth : Number.parseInt(width, 10) : Number.parseInt(width, 10);
@@ -166,13 +162,12 @@ export default function TimePicker({
       beginMoment.hour(begin.split(':')[0]).minute(begin.split(':')[1]);
       endMoment.hour(end.split(':')[0]).minute(end.split(':')[1]);
       setValue([beginMoment, endMoment]);
-      onValueChange([beginMoment, endMoment]);
-      if (confirmModal) {
+      if (confirmModal) { // delay committing the change
         setShowConfirm(true);
         setPickerBlur('blur(2px)');
         maskRef.current.style.width = `${timePickerRef.current.scrollWidth}px`;
         maskRef.current.style.height = `${timePickerRef.current.scrollHeight}px`;
-      }
+      } else onValueChange([beginMoment, endMoment]); // commit the change right away
     } else {
       nextSelectedCell[0] = target.dataset.id;
       target.className = styles['cell-selected'];
@@ -234,10 +229,9 @@ export default function TimePicker({
     beginMoment.hour(0).minute(0);
     endMoment.hour(0).minute(0);
     setValue([beginMoment, endMoment]);
-    onValueChange([beginMoment, endMoment]);
     const indexOffSet = index.length;
     [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell);
-  }, [index.length, onValueChange, value]);
+  }, [index.length, value]);
 
   const timePoint = useMemo(() => {
     const arr = [];
@@ -348,7 +342,7 @@ export default function TimePicker({
             </div>
           </div>
           <div className={styles['confirm-select']}>
-            <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); setPickerBlur(''); }}>Yes</button>
+            <button type="button" className={styles['confirm-yes']} onClick={() => { setShowConfirm(false); setVisible(false); setPickerBlur(''); onValueChange(value); }}>Yes</button>
             <button type="button" className={styles['confirm-no']} onClick={() => { setShowConfirm(false); setPickerBlur(''); }}>No</button>
           </div>
         </div>

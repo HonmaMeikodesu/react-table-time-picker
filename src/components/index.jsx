@@ -5,14 +5,10 @@ import React, {
 import ReactDOM from 'react-dom';
 import propTypes from 'prop-types';
 import moment from 'moment';
+import { v4 as uuidv4 } from 'uuid';
 import TimePicker from 'components/time-picker';
 
 const styleSheetUUID = 'e313afea-95c8-4227-812f-7606571bd6a6';
-
-const ele = document.createElement('div');
-const eleStyle = ['absolute', '0px', '0px', '100%'];
-['position', 'left', 'top', 'width'].forEach((key, idx) => ele.style[key] = eleStyle[idx]);
-document.body.appendChild(ele);
 
 export default function TimePickerAttachment({
   size, zIndex, attachElement, maxHeight, maxWidth, position, defaultValue, onValueChange,
@@ -23,8 +19,9 @@ export default function TimePickerAttachment({
   const container = useMemo(() => React.cloneElement(attachElement, { onClick: () => setVisible(true), ref: positionRef }), [attachElement]);
 
   useEffect(() => {
+    const styleSheetElementID = uuidv4();
     const style = document.createElement('style');
-    style.setAttribute('id', 'e313afea-95c8-4227-812f-7606571bd6a6');
+    style.setAttribute('id', styleSheetElementID);
     document.body.appendChild(style);
     style.sheet.insertRule(`:root {
     --cell-${styleSheetUUID}: ${originColor};
@@ -33,11 +30,15 @@ export default function TimePickerAttachment({
     );
     }`);
     return () => {
-      document.getElementById('e313afea-95c8-4227-812f-7606571bd6a6').remove();
+      document.getElementById(styleSheetElementID).remove();
     };
   }, [includedColor, originColor, selectedColor]);
 
   useEffect(() => {
+    const ele = document.createElement('div');
+    const eleStyle = ['absolute', '0px', '0px', '100%'];
+    ['position', 'left', 'top', 'width'].forEach((key, idx) => ele.style[key] = eleStyle[idx]);
+    document.body.appendChild(ele);
     ReactDOM.render(
       <TimePicker
         size={size}
@@ -54,9 +55,9 @@ export default function TimePickerAttachment({
       />,
       ele,
     );
-    return () => {
-    };
-  }, [confirmModal, maxHeight, maxWidth, position, size, visible, zIndex]);
+    return () => { ReactDOM.unmountComponentAtNode(ele); ele.remove(); };
+  }, [confirmModal, defaultValue, maxHeight, maxWidth, onValueChange, position, size, visible, zIndex]);
+
   return (
     <>
       {container}
