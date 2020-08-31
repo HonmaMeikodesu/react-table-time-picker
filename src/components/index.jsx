@@ -12,7 +12,7 @@ const styleSheetUUID = 'e313afea-95c8-4227-812f-7606571bd6a6';
 
 export default function TimePickerAttachment({
   size, zIndex, attachElement, maxHeight, maxWidth, position, defaultValue, onValueChange,
-  originColor, includedColor, selectedColor, confirmModal, height, width, fontSize,
+  originColor, includedColor, selectedColor, confirmModal, height, width, fontSize, className,
 }) {
   const [visible, setVisible] = useState(false);
   const positionRef = useRef(null);
@@ -38,6 +38,7 @@ export default function TimePickerAttachment({
     const ele = document.createElement('div');
     const eleStyle = ['absolute', '0px', '0px', '100%'];
     ['position', 'left', 'top', 'width'].forEach((key, idx) => ele.style[key] = eleStyle[idx]);
+    className && (ele.className = className);
     document.body.appendChild(ele);
     ReactDOM.render(
       <TimePicker
@@ -59,7 +60,7 @@ export default function TimePickerAttachment({
       ele,
     );
     return () => { ReactDOM.unmountComponentAtNode(ele); ele.remove(); };
-  }, [confirmModal, defaultValue, maxHeight, maxWidth, onValueChange, position, size, visible, zIndex, width, height, fontSize]);
+  }, [confirmModal, defaultValue, maxHeight, maxWidth, onValueChange, position, size, visible, zIndex, width, height, fontSize, className]);
 
   return (
     <>
@@ -84,6 +85,7 @@ TimePickerAttachment.propTypes = {
   width: propTypes.number,
   height: propTypes.number,
   fontSize: propTypes.number,
+  className: propTypes.string,
 };
 TimePickerAttachment.defaultProps = {
   originColor: '#66ccff',
@@ -100,4 +102,5 @@ TimePickerAttachment.defaultProps = {
   width: undefined,
   height: undefined,
   fontSize: undefined,
+  className: '',
 };

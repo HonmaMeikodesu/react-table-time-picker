@@ -57,4 +57,5 @@ render(<App />, document.getElementById('root'));
 | originColor | CSS Color | #66ccff | color of the table cell
 | includedColor | CSS Color | rgba(102, 204, 255, 0.5) | color of the table cell when included between the begin time and end time
 | selectedColor | CSS Color | #458bad | color of the table cell when selected as begin time or end time
-| confirmModal | boolean | true | whether to pop up a confirm modal when begin time and end time are both selected
+| confirmModal | Boolean | true | whether to pop up a confirm modal when begin time and end time are both selected |
+| className | String | empty string | className of the time picker wrapper element, note that this prop is designed to help detecting the propagation of events produced inside the time picker |

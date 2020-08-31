@@ -43,6 +43,7 @@ function App() {
       {
         anotherV && (
           <TimePicker
+            className="customClassName"
             position="bottom"
             size="medium"
             defaultValue={[anotherTime[0], anotherTime[1]]}
