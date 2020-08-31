@@ -84,7 +84,7 @@
                 opacity: 0;
                 content: attr(data-tooltip);
                 position: absolute;
-                bottom: 120%;
+                bottom: calc(100% + 0.2em); // calculate rectangle position relative to arrow
                 padding: 5px;
                 background-color: @tooltip-bg;
                 color: @tooltip-font-color;
