@@ -263,7 +263,7 @@ export default function TimePicker({
   useEffect(() => {
     let clear;
     document.addEventListener('click', clear = (e) => {
-      if (!ref.current.parentNode.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
+      if (visible && !positionRef.current.contains(e.target) && !ref.current.parentNode.contains(e.target) && e.target !== positionRef.current) { setVisible(false); }
     });
     const indexOffSet = index.length;
     let cover; let first; let last;

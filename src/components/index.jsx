@@ -34,7 +34,7 @@ export default function TimePickerAttachment({
     };
   }, [includedColor, originColor, selectedColor]);
 
-  useEffect(() => {
+  useEffect(() => { // render time picker after input is mounted on DOM
     const ele = document.createElement('div');
     const eleStyle = ['absolute', '0px', '0px', '100%'];
     ['position', 'left', 'top', 'width'].forEach((key, idx) => ele.style[key] = eleStyle[idx]);

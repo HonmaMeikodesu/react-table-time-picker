@@ -28,14 +28,17 @@ function App() {
             defaultValue={[time[0], time[1]]}
             onValueChange={(arg) => setTime(arg)}
             attachElement={(
-              <input
-                readOnly
-                style={{
-                  position: 'absolute', left: '10px', top: '100px', width: '400px', textAlign: 'center',
-                }}
-                value={`${time[0].format('MM-DD HH:mm')} ~ ${time[1].format('MM-DD HH:mm')}`}
-                placeholder="input"
-              />
+              <div>
+                <div>click</div>
+                <input
+                  readOnly
+                  style={{
+                    position: 'absolute', left: '10px', top: '100px', width: '400px', textAlign: 'center',
+                  }}
+                  value={`${time[0].format('MM-DD HH:mm')} ~ ${time[1].format('MM-DD HH:mm')}`}
+                  placeholder="input"
+                />
+              </div>
             )}
           />
         )
