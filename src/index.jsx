@@ -18,10 +18,8 @@ function App() {
       {
         v && (
           <TimePicker
-            position="bottom"
-            maxWidth={1000}
-            maxHeight={400}
-            size="medium"
+            position="top"
+            size="small"
             defaultValue={[time[0], time[1]]}
             onValueChange={(arg) => setTime(arg)}
             attachElement={(

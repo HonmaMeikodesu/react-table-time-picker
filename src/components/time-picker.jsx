@@ -57,9 +57,9 @@ export default function TimePicker({
       case 'small':
         return '300px';
       case 'medium':
-        return '500px';
+        return '460px';
       case 'big':
-        return '800px';
+        return '600px';
       default:
         return '300px';
     }
@@ -291,7 +291,7 @@ export default function TimePicker({
   }, []); // missing of dependency is intended here
 
   useEffect(() => {
-    visible && (headerRef.current.style.width = `${timePickerRef.current.scrollWidth}px`);
+    visible && (headerRef.current.style.width = `${timePickerRef.current.scrollWidth - 10}px`);
   }, [visible]);
 
   return (
@@ -320,7 +320,7 @@ export default function TimePicker({
         <div className={styles.clear} onClick={() => handleClear()}>clear</div>
       </div>
       {/* prevent unneccessary scrollbar appears due to grid overlay */}
-      <div className={styles.container} ref={ref} style={{ width: Number.parseInt(width, 10) - 10, filter: pickerBlur }}>
+      <div className={styles.container} ref={ref} style={{ width: `${Number.parseInt(width, 10) - 10}px`, filter: pickerBlur }}>
         {index.concat(timePoint)}
       </div>
       {
