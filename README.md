@@ -48,8 +48,11 @@ render(<App />, document.getElementById('root'));
 | maxHeight | Number | undefined | css max-height
 | position | ['top','right','bottom','left'] | medium | position of the time picker relative to its attach element
 | defaultValue | [`moment`,`moment`] | [moment(), moment()] | moment instance of begin time and end time
-| onValueChange | Function | - | call back when both start time and end time are selected,two-tuple `[moment,moment]` which represents start and end time will be passed as arguments
+| onValueChange | Function | () => {} | call back when both start time and end time are selected,two-tuple `[moment,moment]` which represents start and end time will be passed as arguments
 | size | ['small','medium','big'] | medium | size of the time picker
+| width | Number | according to size | if you are not satisfied with the preset width according to size props,custom it with this prop |
+| height | Number | according to size | if you are not satisfied with the preset height according to size props,custom it with this prop |
+| fontSize | Number | according to size | if you are not satisfied with the preset fontSize according to size props,custom it with this prop |
 | attachElement | HTMLElement | - | the attachment for the time picker
 | originColor | CSS Color | #66ccff | color of the table cell
 | includedColor | CSS Color | rgba(102, 204, 255, 0.5) | color of the table cell when included between the begin time and end time

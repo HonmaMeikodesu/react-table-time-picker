@@ -11,8 +11,8 @@ import info from 'static/info-circle.svg';
 import { formatTime } from 'utils';
 
 export default function TimePicker({
-  size, zIndex, maxHeight, maxWidth, position,
-  confirmModal, positionRef, visible, setVisible, defaultValue, onValueChange,
+  size, zIndex, maxHeight, maxWidth, position, height: inputHeight, width: inputWidth,
+  confirmModal, positionRef, visible, setVisible, defaultValue, onValueChange, fontSize: inputFontSize,
 }) {
   const [selectedRange, setSelectedRange] = useState([null, null]);
   const [onHoverRange, setOnHoverRange] = useState();
@@ -29,6 +29,7 @@ export default function TimePicker({
     return !(beginDay === endDay);
   }, [value]);
   const width = useMemo(() => {
+    if (inputWidth) return `${inputWidth}px`;
     switch (size) {
       case 'small':
         return '800px';
@@ -39,8 +40,9 @@ export default function TimePicker({
       default:
         return '800px';
     }
-  }, [size]);
+  }, [inputWidth, size]);
   const fontSize = useMemo(() => {
+    if (inputFontSize) return `${inputFontSize}px`;
     switch (size) {
       case 'small':
         return '8px';
@@ -51,8 +53,9 @@ export default function TimePicker({
       default:
         return '8px';
     }
-  }, [size]);
+  }, [inputFontSize, size]);
   const height = useMemo(() => {
+    if (inputHeight) return `${inputHeight}px`;
     switch (size) {
       case 'small':
         return '300px';
@@ -63,7 +66,7 @@ export default function TimePicker({
       default:
         return '300px';
     }
-  }, [size]);
+  }, [inputHeight, size]);
 
   const index = useMemo(() => {
     const logo = [<div key="hint" className={styles.index}><img src={hint} alt="H/M" style={{ width: '100%', height: '100%' }} /></div>];
@@ -359,8 +362,8 @@ export default function TimePicker({
 
 TimePicker.propTypes = {
   zIndex: propTypes.number.isRequired,
-  maxWidth: propTypes.number.isRequired,
-  maxHeight: propTypes.number.isRequired,
+  maxWidth: propTypes.number,
+  maxHeight: propTypes.number,
   position: propTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
   size: propTypes.oneOf(['small', 'medium', 'big']).isRequired,
   confirmModal: propTypes.bool.isRequired,
@@ -370,4 +373,15 @@ TimePicker.propTypes = {
   setVisible: propTypes.func.isRequired,
   defaultValue: propTypes.arrayOf(propTypes.instanceOf(moment)).isRequired,
   onValueChange: propTypes.func.isRequired,
+  height: propTypes.number,
+  width: propTypes.number,
+  fontSize: propTypes.number,
+};
+
+TimePicker.defaultProps = {
+  maxHeight: undefined,
+  maxWidth: undefined,
+  width: undefined,
+  height: undefined,
+  fontSize: undefined,
 };

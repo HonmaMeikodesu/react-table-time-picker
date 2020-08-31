@@ -20,6 +20,11 @@ function App() {
           <TimePicker
             position="top"
             size="small"
+            width={2000}
+            maxWidth={1000}
+            maxHeight={500}
+            height={1000}
+            fontSize={10}
             defaultValue={[time[0], time[1]]}
             onValueChange={(arg) => setTime(arg)}
             attachElement={(
@@ -39,8 +44,6 @@ function App() {
         anotherV && (
           <TimePicker
             position="bottom"
-            maxWidth={1000}
-            maxHeight={400}
             size="medium"
             defaultValue={[anotherTime[0], anotherTime[1]]}
             onValueChange={(arg) => setAnotherTime(arg)}
