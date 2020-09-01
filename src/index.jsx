@@ -6,7 +6,7 @@ import TimePicker from 'components/index';
 
 function App() {
   const [time, setTime] = useState([moment(), moment()]);
-  const [anotherTime, setAnotherTime] = useState([moment(), moment()]);
+  const [anotherTime, setAnotherTime] = useState([moment().subtract(1, 'days'), moment().subtract(4, 'hours')]);
   const [v, setV] = useState(false);
   const [anotherV, setAnotherV] = useState(false);
   return (

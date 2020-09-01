@@ -10,6 +10,9 @@ import time from 'static/time-circle-fill.svg';
 import info from 'static/info-circle.svg';
 import { formatTime } from 'utils';
 
+const previousDay = '(previous day)';
+const nextDay = '(next day)';
+
 export default function TimePicker({
   size, zIndex, maxHeight, maxWidth, position, height: inputHeight, width: inputWidth,
   confirmModal, positionRef, visible, setVisible, defaultValue, onValueChange, fontSize: inputFontSize,
@@ -122,7 +125,7 @@ export default function TimePicker({
 
   const handleCellClick = useCallback((e) => {
     e.preventDefault();
-    const { target } = e;
+    const target = e.currentTarget;
     const indexOffSet = index.length;
     let nextSelectedCell = selectedRange.map((v) => v);
     const childrenList = [...ref.current.children];
@@ -133,6 +136,11 @@ export default function TimePicker({
       if (Number.parseInt(selectedRange[0], 10) < Number.parseInt(selectedRange[1], 10)) {
         recover = childrenList.slice(indexOffSet + Number.parseInt(selectedRange[0], 10), indexOffSet + Number.parseInt(selectedRange[1], 10) + 1);
       } else if (Number.parseInt(selectedRange[0], 10) > Number.parseInt(selectedRange[1], 10)) {
+        // if selected startTime is bigger then selected endTime, it must be a cross day case
+        // No need to do a cross day judgement here
+        // clear previous cross day hints
+        childrenList[indexOffSet + Number.parseInt(selectedRange[1], 10)].firstChild.innerText = childrenList[indexOffSet + Number.parseInt(selectedRange[1], 10)].dataset.tooltip;
+        childrenList[indexOffSet + Number.parseInt(selectedRange[0], 10)].firstChild.innerText = childrenList[indexOffSet + Number.parseInt(selectedRange[0], 10)].dataset.tooltip;
         recover = childrenList.slice(indexOffSet, indexOffSet + Number.parseInt(selectedRange[1], 10) + 1)
           .concat(childrenList.slice(indexOffSet + Number.parseInt(selectedRange[0], 10), childrenList.length));
       } else recover = [childrenList[indexOffSet + Number.parseInt(selectedRange[0], 10)]];
@@ -172,47 +180,62 @@ export default function TimePicker({
       if (confirmModal) { // delay committing the change
         setShowConfirm(true);
         setPickerBlur('blur(2px)');
+        // force reflow is obliged here
         maskRef.current.style.width = `${timePickerRef.current.scrollWidth}px`;
         maskRef.current.style.height = `${timePickerRef.current.scrollHeight}px`;
-      } else onValueChange([beginMoment, endMoment]); // commit the change right away
+      } else { // commit the change right away and close the panel
+        onValueChange([beginMoment, endMoment]);
+        setVisible(false);
+      }
     } else {
       nextSelectedCell[0] = target.dataset.id;
       target.className = styles['cell-selected'];
     }
     setSelectedRange(nextSelectedCell);
-  }, [index.length, selectedRange, value, onValueChange, confirmModal, crossDays]);
+  }, [index.length, selectedRange, value, onValueChange, confirmModal, crossDays, setVisible]);
 
   const handleHoverHighLight = useCallback((e) => {
     e.preventDefault();
+    // highlight index
+    const target = e.currentTarget;
     const indexOffset = index.length;
     const imgOffset = 1;
     const columnOffset = 60;
-    const highLightColumnIndex = ref.current.children[imgOffset + (e.target.dataset.id % 60)];
-    const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(e.target.dataset.id / 60)];
+    const highLightColumnIndex = ref.current.children[imgOffset + (target.dataset.id % 60)];
+    const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(target.dataset.id / 60)];
     highLightColumnIndex.className = highLightRowIndex.className = styles['index-hover'];
+    // highlight cell and cancel previous cell highlight
     if (selectedRange[0] !== null && selectedRange[1] === null) {
-      setOnHoverRange([selectedRange[0], e.target.dataset.id]);
+      setOnHoverRange([selectedRange[0], target.dataset.id]);
       let cover = [];
       let beginIdx;
       let endIdx;
       let recover = [];
       const childrenList = [...ref.current.children];
-      if (Number.parseInt(e.target.dataset.id, 10) > Number.parseInt(selectedRange[0], 10)) {
+      if (Number.parseInt(target.dataset.id, 10) > Number.parseInt(selectedRange[0], 10)) {
         beginIdx = indexOffset + Number.parseInt(selectedRange[0], 10) + 1;
-        endIdx = indexOffset + Number.parseInt(e.target.dataset.id, 10);
+        endIdx = indexOffset + Number.parseInt(target.dataset.id, 10);
         recover = childrenList.slice(indexOffset, beginIdx - 1)
           .concat(childrenList.slice(endIdx, childrenList.length));
         cover = childrenList.slice(beginIdx, endIdx);
-      } else if (Number.parseInt(e.target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
+      } else if (Number.parseInt(target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
+        // selected time range maybe cross 24 hours
         beginIdx = indexOffset + Number.parseInt(selectedRange[0], 10) + 1;
-        endIdx = indexOffset + Number.parseInt(e.target.dataset.id, 10);
+        endIdx = indexOffset + Number.parseInt(target.dataset.id, 10);
+        if (crossDays) {
+          // // pseudo-element relayout here will cause terrible performance disaster!
+          // childrenList[endIdx].dataset.tooltip += nextDay;
+          // childrenList[beginIdx - 1].dataset.tooltip = childrenList[beginIdx - 1].dataset.tooltip + previousDay;
+          childrenList[endIdx].firstChild.innerText = childrenList[endIdx].dataset.tooltip + nextDay;
+          childrenList[beginIdx - 1].firstChild.innerText = childrenList[beginIdx - 1].dataset.tooltip + previousDay;
+        }
         recover = crossDays ? childrenList.slice(endIdx, beginIdx - 1)
           : childrenList.slice(indexOffset, endIdx)
             .concat(childrenList.slice(beginIdx, childrenList.length));
         cover = crossDays ? childrenList.slice(indexOffset, endIdx)
           .concat(childrenList.slice(beginIdx, childrenList.length))
-          : childrenList.slice(indexOffset + Number.parseInt(e.target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
-        !crossDays && setOnHoverRange([e.target.dataset.id, selectedRange[0]]);
+          : childrenList.slice(indexOffset + Number.parseInt(target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
+        !crossDays && setOnHoverRange([target.dataset.id, selectedRange[0]]);
       } else cover = [];
       cover.forEach((cell) => cell.className !== styles['cell-included'] && (cell.className = styles['cell-included']));
       recover.forEach((cell) => cell.className !== styles.cell && (cell.className = styles.cell));
@@ -220,13 +243,26 @@ export default function TimePicker({
   }, [selectedRange, index, setOnHoverRange, crossDays]);
 
   const handleBlur = useCallback((e) => {
+    const target = e.currentTarget;
     e.preventDefault();
+    const indexOffset = index.length;
+    // cancel index highlight
     const imgOffset = 1;
     const columnOffset = 60;
-    const highLightColumnIndex = ref.current.children[imgOffset + (e.target.dataset.id % 60)];
-    const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(e.target.dataset.id / 60)];
+    const highLightColumnIndex = ref.current.children[imgOffset + (target.dataset.id % 60)];
+    const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(target.dataset.id / 60)];
     highLightColumnIndex.className = highLightRowIndex.className = styles.index;
-  }, []);
+    // restore crossday tooltips
+    if (selectedRange[0] !== null && selectedRange[1] === null && crossDays && Number.parseInt(target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
+      const beginIdx = indexOffset + Number.parseInt(selectedRange[0], 10);
+      const endIdx = indexOffset + Number.parseInt(target.dataset.id, 10);
+      const childrenList = [...ref.current.children];
+      // childrenList[beginIdx].dataset.tooltip = childrenList[beginIdx].dataset.tooltip.replace(previousDay, '');
+      // childrenList[endIdx].dataset.tooltip = childrenList[endIdx].dataset.tooltip.replace(nextDay, '');
+      childrenList[beginIdx].firstChild.innerText = childrenList[beginIdx].dataset.tooltip;
+      childrenList[endIdx].firstChild.innerText = childrenList[endIdx].dataset.tooltip;
+    }
+  }, [crossDays, index.length, selectedRange]);
 
   const handleClear = useCallback(() => {
     setSelectedRange([null, null]);
@@ -253,7 +289,12 @@ export default function TimePicker({
             onClick={handleCellClick}
             onMouseEnter={(e) => handleHoverHighLight(e)}
             onMouseLeave={(e) => handleBlur(e)}
-          />,
+          >
+            <span className={styles.before}>
+              {`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
+            </span>
+            <span className={styles.after} />
+          </div>,
         );
       }
     }
@@ -275,6 +316,8 @@ export default function TimePicker({
       first = cover.shift();
       last = cover.pop();
     } else if (defaultBegin > defaultEnd && crossDays) {
+      childrenList[indexOffSet + defaultEnd].firstChild.innerText = childrenList[indexOffSet + defaultEnd].dataset.tooltip + nextDay;
+      childrenList[indexOffSet + defaultBegin].firstChild.innerText = childrenList[indexOffSet + defaultBegin].dataset.tooltip + previousDay;
       cover = childrenList.slice(indexOffSet, indexOffSet + defaultEnd)
         .concat(childrenList.slice(indexOffSet + defaultBegin + 1, childrenList.length));
       first = childrenList[indexOffSet + defaultEnd];

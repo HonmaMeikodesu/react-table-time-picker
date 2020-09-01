@@ -79,7 +79,7 @@
             &:hover {
                 background-color: var(--cell-selected-e313afea-95c8-4227-812f-7606571bd6a6);
             }
-            &::before {
+            & .before {
                 visibility: hidden;
                 opacity: 0;
                 content: attr(data-tooltip);
@@ -92,12 +92,12 @@
                 left: 50%;
                 transform: translateX(-50%);
             }
-            &:hover::before {
+            &:hover .before {
                 opacity: 1;
                 transition: @general-transition;
                 visibility: visible;
             }
-            &::after {
+            & .after {
                 width: 0;
                 height: 0;
                 position: absolute;
@@ -111,7 +111,7 @@
                 bottom: 100%;
                 left: 50%;
             }
-            &:hover::after {
+            &:hover .after {
                 opacity: 1;
                 transition: all .3s ease;
                 visibility: visible;
@@ -124,11 +124,11 @@
         .cell-selected {
             .cell();
             background-color: var(--cell-selected-e313afea-95c8-4227-812f-7606571bd6a6);
-            &::before {
+            & .before {
                 visibility: visible;
                 opacity: 1;
             }
-            &::after {
+            & .after {
                 visibility: visible;
                 opacity: 1;
             }
