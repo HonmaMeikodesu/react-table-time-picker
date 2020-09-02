@@ -16,6 +16,7 @@ const nextDay = '(next day)';
 export default function TimePicker({
   size, zIndex, maxHeight, maxWidth, position, height: inputHeight, width: inputWidth,
   confirmModal, positionRef, visible, setVisible, defaultValue, onValueChange, fontSize: inputFontSize,
+  minuteStep, hourStep,
 }) {
   const [selectedRange, setSelectedRange] = useState([null, null]);
   const [onHoverRange, setOnHoverRange] = useState();
@@ -71,12 +72,14 @@ export default function TimePicker({
     }
   }, [inputHeight, size]);
 
+  const steppingMode = useMemo(() => (hourStep !== 1 || minuteStep !== 1), [hourStep, minuteStep]);
+
   const index = useMemo(() => {
     const logo = [<div key="hint" className={styles.index}><img src={hint} alt="H/M" style={{ width: '100%', height: '100%' }} /></div>];
     const column = [];
     for (let i = 0; i < 60; i++) {
       column.push(
-        <div key={`column-${i}`} className={styles.index} style={{ gridArea: `1 / ${i + 2} / 2 / ${i + 3}` }}>
+        <div key={`column-${i}`} className={steppingMode ? (i % minuteStep) ? styles['index-disable'] : styles.index : styles.index} style={{ gridArea: `1 / ${i + 2} / 2 / ${i + 3}` }}>
           {i}
         </div>,
       );
@@ -84,13 +87,13 @@ export default function TimePicker({
     const row = [];
     for (let i = 0; i < 24; i++) {
       row.push(
-        <div key={`row-${i}`} className={styles.index} style={{ gridArea: `${i + 2} / 1 / ${i + 3} / 2` }}>
+        <div key={`row-${i}`} className={steppingMode ? (i % hourStep) ? styles['index-disable'] : styles.index : styles.index} style={{ gridArea: `${i + 2} / 1 / ${i + 3} / 2` }}>
           {i}
         </div>,
       );
     }
     return logo.concat(column, row);
-  }, []);
+  }, [hourStep, minuteStep, steppingMode]);
 
   // TODO containerLeft will lose precision when scrolling
   const containerLeft = useMemo(() => {
@@ -144,7 +147,7 @@ export default function TimePicker({
         recover = childrenList.slice(indexOffSet, indexOffSet + Number.parseInt(selectedRange[1], 10) + 1)
           .concat(childrenList.slice(indexOffSet + Number.parseInt(selectedRange[0], 10), childrenList.length));
       } else recover = [childrenList[indexOffSet + Number.parseInt(selectedRange[0], 10)]];
-      recover.forEach((cell) => cell.className = styles.cell);
+      recover.forEach((cell) => cell.className !== styles['cell-disable'] && (cell.className = styles.cell));
       target.className = styles['cell-selected'];
     } else if (selectedRange[0] !== null) {
       nextSelectedCell[1] = target.dataset.id;
@@ -170,7 +173,7 @@ export default function TimePicker({
         first = last = {};
       }
       first.className = last.className = styles['cell-selected'];
-      cover.forEach((cell) => cell.className = styles['cell-included']);
+      cover.forEach((cell) => cell.className !== styles['cell-disable'] && (cell.className = styles['cell-included']));
       const [begin, end] = formatTime(nextSelectedCell);
       const beginMoment = moment(value[0]);
       const endMoment = moment(value[1]);
@@ -237,8 +240,8 @@ export default function TimePicker({
           : childrenList.slice(indexOffset + Number.parseInt(target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
         !crossDays && setOnHoverRange([target.dataset.id, selectedRange[0]]);
       } else cover = [];
-      cover.forEach((cell) => cell.className !== styles['cell-included'] && (cell.className = styles['cell-included']));
-      recover.forEach((cell) => cell.className !== styles.cell && (cell.className = styles.cell));
+      cover.forEach((cell) => cell.className !== styles['cell-disable'] && cell.className !== styles['cell-included'] && (cell.className = styles['cell-included']));
+      recover.forEach((cell) => cell.className !== styles['cell-disable'] && cell.className !== styles.cell && (cell.className = styles.cell));
     }
   }, [selectedRange, index, setOnHoverRange, crossDays]);
 
@@ -273,7 +276,7 @@ export default function TimePicker({
     endMoment.hour(0).minute(0);
     setValue([beginMoment, endMoment]);
     const indexOffSet = index.length;
-    [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className = styles.cell);
+    [...ref.current.children].slice(indexOffSet).forEach((cell) => cell.className !== styles['cell-disable'] && (cell.className = styles.cell));
   }, [index.length, value]);
 
   const timePoint = useMemo(() => {
@@ -283,23 +286,29 @@ export default function TimePicker({
         arr.push(
           <div
             key={`cell-${i * 60 + j}`}
-            className={styles.cell}
+            className={steppingMode ? (i % hourStep || j % minuteStep) ? styles['cell-disable'] : styles.cell : styles.cell}
             data-tooltip={`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
             data-id={i * 60 + j}
-            onClick={handleCellClick}
-            onMouseEnter={(e) => handleHoverHighLight(e)}
-            onMouseLeave={(e) => handleBlur(e)}
+            onClick={steppingMode ? (i % hourStep || j % minuteStep) ? null : handleCellClick : handleCellClick}
+            onMouseEnter={steppingMode ? (i % hourStep || j % minuteStep) ? null : (e) => handleHoverHighLight(e) : (e) => handleHoverHighLight(e)}
+            onMouseLeave={steppingMode ? (i % hourStep || j % minuteStep) ? null : (e) => handleBlur(e) : (e) => handleBlur(e)}
           >
-            <span className={styles.before}>
-              {`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
-            </span>
-            <span className={styles.after} />
+            {
+              (!steppingMode || !(i % hourStep || j % minuteStep)) && (
+                <>
+                  <span className={styles.before}>
+                    {`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
+                  </span>
+                  <span className={styles.after} />
+                </>
+              )
+            }
           </div>,
         );
       }
     }
     return arr;
-  }, [handleBlur, handleCellClick, handleHoverHighLight]);
+  }, [handleBlur, handleCellClick, handleHoverHighLight, hourStep, minuteStep, steppingMode]);
 
   useEffect(() => {
     let clear;
@@ -328,8 +337,9 @@ export default function TimePicker({
     } else {
       throw (new Error('arguments error!'));
     }
-    first.className = last.className = styles['cell-selected'];
-    cover.forEach((cell) => cell.className = styles['cell-included']);
+    if (first.className === styles['cell-disable'] || last.className === styles['cell-disable']) throw new Error('arguments passed in do not match the stepping pattern!');
+    else first.className = last.className = styles['cell-selected'];
+    cover.forEach((cell) => cell.className !== styles['cell-disable'] && (cell.className = styles['cell-included']));
     setSelectedRange([defaultBegin, defaultEnd]);
     return () => {
       document.removeEventListener('click', clear);
@@ -419,6 +429,8 @@ TimePicker.propTypes = {
   height: propTypes.number,
   width: propTypes.number,
   fontSize: propTypes.number,
+  minuteStep: propTypes.number.isRequired,
+  hourStep: propTypes.number.isRequired,
 };
 
 TimePicker.defaultProps = {

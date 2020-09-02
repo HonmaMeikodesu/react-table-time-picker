@@ -6,7 +6,7 @@ import TimePicker from 'components/index';
 
 function App() {
   const [time, setTime] = useState([moment(), moment()]);
-  const [anotherTime, setAnotherTime] = useState([moment().subtract(1, 'days'), moment().subtract(4, 'hours')]);
+  const [anotherTime, setAnotherTime] = useState([moment('1970-01-03 16:00:00'), moment('1970-01-02 12:50:00')]);
   const [v, setV] = useState(false);
   const [anotherV, setAnotherV] = useState(false);
   return (
@@ -49,6 +49,11 @@ function App() {
             className="customClassName"
             position="bottom"
             size="medium"
+            minuteStep={5}
+            hourStep={1}
+            originColor="#ecf0f1"
+            includedColor="rgb(52, 73, 94)"
+            selectedColor="#e64c3c"
             defaultValue={[anotherTime[0], anotherTime[1]]}
             onValueChange={(arg) => setAnotherTime(arg)}
             attachElement={(

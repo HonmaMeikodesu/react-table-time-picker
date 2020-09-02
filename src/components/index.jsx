@@ -13,6 +13,7 @@ const styleSheetUUID = 'e313afea-95c8-4227-812f-7606571bd6a6';
 export default function TimePickerAttachment({
   size, zIndex, attachElement, maxHeight, maxWidth, position, defaultValue, onValueChange,
   originColor, includedColor, selectedColor, confirmModal, height, width, fontSize, className,
+  minuteStep, hourStep,
 }) {
   const [visible, setVisible] = useState(false);
   const positionRef = useRef(null);
@@ -56,11 +57,13 @@ export default function TimePickerAttachment({
         height={height}
         width={width}
         fontSize={fontSize}
+        minuteStep={minuteStep}
+        hourStep={hourStep}
       />,
       ele,
     );
     return () => { ReactDOM.unmountComponentAtNode(ele); ele.remove(); };
-  }, [confirmModal, defaultValue, maxHeight, maxWidth, onValueChange, position, size, visible, zIndex, width, height, fontSize, className]);
+  }, [confirmModal, defaultValue, maxHeight, maxWidth, onValueChange, position, size, visible, zIndex, width, height, fontSize, className, minuteStep, hourStep]);
 
   return (
     <>
@@ -86,6 +89,8 @@ TimePickerAttachment.propTypes = {
   height: propTypes.number,
   fontSize: propTypes.number,
   className: propTypes.string,
+  minuteStep: propTypes.number,
+  hourStep: propTypes.number,
 };
 TimePickerAttachment.defaultProps = {
   originColor: '#66ccff',
@@ -103,4 +108,6 @@ TimePickerAttachment.defaultProps = {
   height: undefined,
   fontSize: undefined,
   className: '',
+  minuteStep: 1,
+  hourStep: 1,
 };
