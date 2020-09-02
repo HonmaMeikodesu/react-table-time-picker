@@ -59,3 +59,11 @@ render(<App />, document.getElementById('root'));
 | selectedColor | CSS Color | #458bad | color of the table cell when selected as begin time or end time
 | confirmModal | Boolean | true | whether to pop up a confirm modal when begin time and end time are both selected |
 | className | String | empty string | className of the time picker wrapper element, note that this prop is designed to help detecting the propagation of events produced inside the time picker |
+| hourStep | Number | 1 | hour interval option |
+| minuteStep | Number | 1 |minute interval option |
+
+# New Features
+- Interval options are now supported
+- Tooltips will now give a explicit hint in cross day cases
+
+![test.jpg](https://i.loli.net/2020/09/02/4Uq2HvXDVGrxa9z.jpg)

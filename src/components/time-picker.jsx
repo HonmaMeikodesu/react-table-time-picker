@@ -6,7 +6,6 @@ import propTypes from 'prop-types';
 import moment from 'moment';
 // import { Textfit } from 'react-textfit';
 import styles from 'static/index.less';
-import hint from 'static/hint.svg';
 import time from 'static/time-circle-fill.svg';
 import info from 'static/info-circle.svg';
 import { formatTime, calculateIdxFromId } from 'utils';
@@ -76,7 +75,7 @@ export default function TimePicker({
   const steppingMode = useMemo(() => (hourStep !== 1 || minuteStep !== 1), [hourStep, minuteStep]);
 
   const index = useMemo(() => {
-    const logo = [<div key="hint" className={styles.index}><img src={hint} alt="H/M" style={{ width: '100%', height: '100%' }} /></div>];
+    const logo = [<div key="hint" className={styles.index} />];
     const column = [];
     let idx = 0;
     for (let i = 0; i < 60; i++) {
@@ -332,8 +331,15 @@ export default function TimePicker({
     let cover; let first; let last;
     const defaultBegin = value[0].hour() * 60 + value[0].minute();
     const defaultEnd = value[1].hour() * 60 + value[1].minute();
-    const defaultBeginIdx = calculateIdxFromId(defaultBegin, minuteStep, hourStep);
-    const defaultEndIdx = calculateIdxFromId(defaultEnd, minuteStep, hourStep);
+    let errorFlag = false;
+    let defaultBeginIdx, defaultEndIdx;
+    try {
+      defaultBeginIdx = calculateIdxFromId(defaultBegin, minuteStep, hourStep);
+      defaultEndIdx = calculateIdxFromId(defaultEnd, minuteStep, hourStep);
+    } catch (error) {
+      errorFlag = true;
+    }
+    if (errorFlag) return;
     const childrenList = [...ref.current.children];
     if (defaultBeginIdx < defaultEndIdx) {
       cover = childrenList.slice(indexOffSet + defaultBeginIdx, indexOffSet + defaultEndIdx + 1);
@@ -361,7 +367,7 @@ export default function TimePicker({
   }, []); // missing of dependency is intended here
 
   useEffect(() => {
-    visible && (headerRef.current.style.width = `${timePickerRef.current.scrollWidth - 26}px`);
+    visible && (headerRef.current.style.width = `${timePickerRef.current.scrollWidth - 16}px`);
   }, [visible]);
 
   return (

@@ -40,13 +40,14 @@
         .clear {
             flex: 0;
             font-size: 2em;
-            width: 2em;
             padding-right: 0.5em;
             cursor: pointer;
             font-weight: inherit;
+            transition: @general-transition;
         }
         .clear:hover {
-            font-weight: bold;
+            transition: @general-transition;
+            transform: scale(1.2);
         }
     }
     .container {
@@ -181,7 +182,7 @@
             .confirm-time {
                 flex: 1;
                 font-weight: bold;
-                font-size: 4em;
+                font-size: 2em;
                 display: flex;
                 align-items: center;
                 justify-content: center;
