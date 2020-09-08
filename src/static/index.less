@@ -81,9 +81,6 @@
             position: relative;
             text-align: center;
             cursor: pointer; 
-            &:hover {
-                background-color: var(--cell-selected-e313afea-95c8-4227-812f-7606571bd6a6);
-            }
             & .before {
                 visibility: hidden;
                 opacity: 0;
@@ -96,11 +93,6 @@
                 border-radius: 2px;
                 left: 50%;
                 transform: translateX(-50%);
-            }
-            &:hover .before {
-                opacity: 1;
-                transition: @general-transition;
-                visibility: visible;
             }
             & .after {
                 width: 0;
@@ -116,14 +108,12 @@
                 bottom: 100%;
                 left: 50%;
             }
-            &:hover .after {
-                opacity: 1;
-                transition: all .3s ease;
-                visibility: visible;
-            }
             &:active {
                 transform: scale(0.7);
                 transition: @general-transition;
+            }
+            & > span {
+                white-space: nowrap;
             }
         }
         .cell-selected {
@@ -141,6 +131,19 @@
         .cell-included {
             .cell();
             background-color: var(--cell-included-e313afea-95c8-4227-812f-7606571bd6a6);
+        }
+        .cell-hover {
+            background-color: var(--cell-selected-e313afea-95c8-4227-812f-7606571bd6a6);
+            .before {
+                opacity: 1;
+                transition: @general-transition;
+                visibility: visible;
+            }
+            .after {
+                opacity: 1;
+                transition: all .3s ease;
+                visibility: visible;
+            }
         }
     }
     .mask {

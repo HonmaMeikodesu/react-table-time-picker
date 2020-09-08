@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/mouse-events-have-key-events */
 /* eslint-disable no-unused-expressions */
 import React, {
   useState, useCallback, useMemo, useRef, useEffect,
@@ -9,9 +10,6 @@ import styles from 'static/index.less';
 import time from 'static/time-circle-fill.svg';
 import info from 'static/info-circle.svg';
 import { formatTime, calculateIdxFromId } from 'utils';
-
-const previousDay = '\n(previousDay)';
-const nextDay = '\n(nextDay)';
 
 export default function TimePicker({
   size, zIndex, maxHeight, maxWidth, position, height: inputHeight, width: inputWidth,
@@ -27,11 +25,11 @@ export default function TimePicker({
   const headerRef = useRef(null);
   const maskRef = useRef(null);
   const timePickerRef = useRef(null);
-  const crossDays = useMemo(() => {
-    const beginDay = value[0].day();
-    const endDay = value[1].day();
-    return !(beginDay === endDay);
-  }, [value]);
+  const crossDays = useMemo(() => !value[0].isSame(value[1], 'day'), [value]);
+  const sameDayButDifferentYear = useMemo(() => crossDays && value[0].month() === value[1].month() && value[0].day() === value[1].day(), [crossDays, value]);
+
+  const previous = useMemo(() => (crossDays ? sameDayButDifferentYear ? value[0].format('YYYY-MM-DD') : value[0].format('MM-DD') : ''), [crossDays, sameDayButDifferentYear, value]);
+  const next = useMemo(() => (crossDays ? sameDayButDifferentYear ? value[1].format('YYYY-MM-DD') : value[1].format('MM-DD') : ''), [crossDays, sameDayButDifferentYear, value]);
   const width = useMemo(() => {
     if (inputWidth) return `${inputWidth}px`;
     switch (size) {
@@ -214,7 +212,6 @@ export default function TimePicker({
   }, [index.length, selectedRange, value, onValueChange, confirmModal, crossDays, setVisible, hourStep, minuteStep]);
 
   const handleHoverHighLight = useCallback((e) => {
-    e.preventDefault();
     // highlight index
     const target = e.currentTarget;
     const indexOffset = index.length;
@@ -223,6 +220,9 @@ export default function TimePicker({
     const highLightColumnIndex = ref.current.children[imgOffset + ((target.dataset.id % (60 * hourStep)) / minuteStep)];
     const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(target.dataset.id / (60 * hourStep))];
     highLightColumnIndex.className = highLightRowIndex.className = styles['index-hover'];
+
+    e.target.classList.add(styles['cell-hover']);
+
     // highlight cell and cancel previous cell highlight
     if (selectedRange[0] !== null && selectedRange[1] === null) {
       setOnHoverRange([selectedRange[0], target.dataset.id]);
@@ -235,7 +235,7 @@ export default function TimePicker({
         beginIdx = indexOffset + calculateIdxFromId(selectedRange[0], minuteStep, hourStep) + 1;
         endIdx = indexOffset + calculateIdxFromId(target.dataset.id, minuteStep, hourStep);
         recover = childrenList.slice(indexOffset, beginIdx - 1)
-          .concat(childrenList.slice(endIdx, childrenList.length));
+          .concat(childrenList.slice(endIdx + 1, childrenList.length));
         cover = childrenList.slice(beginIdx, endIdx);
       } else if (Number.parseInt(target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
         // selected time range maybe cross 24 hours
@@ -243,27 +243,26 @@ export default function TimePicker({
         endIdx = indexOffset + calculateIdxFromId(target.dataset.id, minuteStep, hourStep);
         if (crossDays) {
           // // pseudo-element relayout here will cause terrible performance disaster!
-          // childrenList[endIdx].dataset.tooltip += nextDay;
-          // childrenList[beginIdx - 1].dataset.tooltip = childrenList[beginIdx - 1].dataset.tooltip + previousDay;
-          childrenList[endIdx].firstChild.innerText = childrenList[endIdx].dataset.tooltip + nextDay;
-          childrenList[beginIdx - 1].firstChild.innerText = childrenList[beginIdx - 1].dataset.tooltip + previousDay;
+          // childrenList[endIdx].dataset.tooltip += next;
+          // childrenList[beginIdx - 1].dataset.tooltip = childrenList[beginIdx - 1].dataset.tooltip + previous;
+          childrenList[endIdx].firstChild.innerText = next.concat('\n', childrenList[endIdx].dataset.tooltip);
+          childrenList[beginIdx - 1].firstChild.innerText = previous.concat('\n', childrenList[beginIdx - 1].dataset.tooltip);
         }
-        recover = crossDays ? childrenList.slice(endIdx, beginIdx - 1)
+        recover = crossDays ? childrenList.slice(endIdx + 1, beginIdx - 1)
           : childrenList.slice(indexOffset, endIdx)
             .concat(childrenList.slice(beginIdx, childrenList.length));
         cover = crossDays ? childrenList.slice(indexOffset, endIdx)
           .concat(childrenList.slice(beginIdx, childrenList.length))
-          : childrenList.slice(indexOffset + Number.parseInt(target.dataset.id, 10) + 1, indexOffset + Number.parseInt(selectedRange[0], 10));
+          : childrenList.slice(endIdx + 1, beginIdx - 1);
         !crossDays && setOnHoverRange([target.dataset.id, selectedRange[0]]);
       } else cover = [];
       cover.forEach((cell) => cell.className !== styles['cell-included'] && (cell.className = styles['cell-included']));
       recover.forEach((cell) => cell.className !== styles.cell && (cell.className = styles.cell));
     }
-  }, [selectedRange, index, setOnHoverRange, crossDays, hourStep, minuteStep]);
+  }, [index.length, minuteStep, hourStep, selectedRange, crossDays, next, previous]);
 
   const handleBlur = useCallback((e) => {
     const target = e.currentTarget;
-    e.preventDefault();
     const indexOffset = index.length;
     // cancel index highlight
     const imgOffset = 1;
@@ -271,6 +270,10 @@ export default function TimePicker({
     const highLightColumnIndex = ref.current.children[imgOffset + ((target.dataset.id % (60 * hourStep)) / minuteStep)];
     const highLightRowIndex = ref.current.children[imgOffset + columnOffset + Math.floor(target.dataset.id / (60 * hourStep))];
     highLightColumnIndex.className = highLightRowIndex.className = styles.index;
+
+    // clear highlight
+    e.target.classList.remove(styles['cell-hover']);
+
     // restore crossday tooltips
     if (selectedRange[0] !== null && selectedRange[1] === null && crossDays && Number.parseInt(target.dataset.id, 10) < Number.parseInt(selectedRange[0], 10)) {
       const beginIdx = indexOffset + calculateIdxFromId(selectedRange[0], minuteStep, hourStep);
@@ -307,10 +310,10 @@ export default function TimePicker({
               data-tooltip={`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
               data-id={i * 60 + j}
               onClick={handleCellClick}
-              onMouseEnter={(e) => handleHoverHighLight(e)}
-              onMouseLeave={(e) => handleBlur(e)}
+              onMouseOver={(e) => handleHoverHighLight(e)}
+              onMouseOut={(e) => handleBlur(e)}
             >
-              <span className={styles.before}>
+              <span className={styles.before} onMouseOver={(e) => e.stopPropagation()}>
                 {`${i}:${j % 60 < 10 ? '0'.concat(j % 60) : j % 60}`}
               </span>
               <span className={styles.after} />
@@ -332,7 +335,8 @@ export default function TimePicker({
     const defaultBegin = value[0].hour() * 60 + value[0].minute();
     const defaultEnd = value[1].hour() * 60 + value[1].minute();
     let errorFlag = false;
-    let defaultBeginIdx, defaultEndIdx;
+    let defaultBeginIdx;
+    let defaultEndIdx;
     try {
       defaultBeginIdx = calculateIdxFromId(defaultBegin, minuteStep, hourStep);
       defaultEndIdx = calculateIdxFromId(defaultEnd, minuteStep, hourStep);
@@ -341,20 +345,22 @@ export default function TimePicker({
     }
     if (errorFlag) return;
     const childrenList = [...ref.current.children];
+    const beginIdx = indexOffSet + defaultBeginIdx;
+    const endIdx = indexOffSet + defaultEndIdx;
     if (defaultBeginIdx < defaultEndIdx) {
-      cover = childrenList.slice(indexOffSet + defaultBeginIdx, indexOffSet + defaultEndIdx + 1);
+      cover = childrenList.slice(beginIdx, endIdx + 1);
       first = cover.shift();
       last = cover.pop();
     } else if (defaultBeginIdx > defaultEndIdx && crossDays) {
-      childrenList[indexOffSet + defaultEndIdx].firstChild.innerText = childrenList[indexOffSet + defaultEndIdx].dataset.tooltip + nextDay;
-      childrenList[indexOffSet + defaultBeginIdx].firstChild.innerText = childrenList[indexOffSet + defaultBeginIdx].dataset.tooltip + previousDay;
-      cover = childrenList.slice(indexOffSet, indexOffSet + defaultEndIdx)
-        .concat(childrenList.slice(indexOffSet + defaultBeginIdx + 1, childrenList.length));
-      first = childrenList[indexOffSet + defaultEndIdx];
-      last = childrenList[indexOffSet + defaultBeginIdx];
+      childrenList[endIdx].firstChild.innerText = next.concat('\n', childrenList[endIdx].dataset.tooltip);
+      childrenList[beginIdx].firstChild.innerText = previous.concat('\n', childrenList[beginIdx].dataset.tooltip);
+      cover = childrenList.slice(indexOffSet, endIdx)
+        .concat(childrenList.slice(beginIdx + 1, childrenList.length));
+      first = childrenList[endIdx];
+      last = childrenList[beginIdx];
     } else if (defaultBeginIdx === defaultEndIdx) {
       cover = [];
-      first = last = childrenList[indexOffSet + defaultBeginIdx];
+      first = last = childrenList[beginIdx];
     } else {
       throw (new Error('arguments error!'));
     }
@@ -370,6 +376,10 @@ export default function TimePicker({
     visible && (headerRef.current.style.width = `${timePickerRef.current.scrollWidth - 16}px`);
   }, [visible]);
 
+  useEffect(() => {
+    if (value[0].isAfter(value[1])) throw new Error('arguments invalid!');
+  }, [value]);
+
   return (
     <div
       className={styles['time-picker-wrapper']}
@@ -383,7 +393,7 @@ export default function TimePicker({
         maxWidth: maxWidth ? `${maxWidth}px` : undefined,
         left: containerLeft,
         top: containerTop,
-        display: `${visible ? 'flex' : 'none'}`,
+        display: `${visible ? 'block' : 'none'}`,
       }}
     >
       <div className={styles.header} ref={headerRef} style={{ filter: pickerBlur }}>

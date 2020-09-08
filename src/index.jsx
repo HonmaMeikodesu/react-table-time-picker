@@ -5,8 +5,8 @@ import moment from 'moment';
 import TimePicker from 'components/index';
 
 function App() {
-  const [time, setTime] = useState([moment(), moment()]);
-  const [anotherTime, setAnotherTime] = useState([moment('1970-01-03 18:03:00'), moment('1970-01-02 12:00:00')]);
+  const [time, setTime] = useState([moment().subtract(1, 'day'), moment()]);
+  const [anotherTime, setAnotherTime] = useState([moment('1970-01-03 12:03:00'), moment('1970-01-03 18:00:00')]);
   const [v, setV] = useState(true);
   const [anotherV, setAnotherV] = useState(true);
   return (
@@ -20,11 +20,6 @@ function App() {
           <TimePicker
             position="top"
             size="small"
-            width={2000}
-            maxWidth={1000}
-            maxHeight={500}
-            height={1000}
-            fontSize={10}
             defaultValue={[time[0], time[1]]}
             onValueChange={(arg) => setTime(arg)}
             attachElement={(

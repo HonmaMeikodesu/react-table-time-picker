@@ -29,7 +29,9 @@ module.exports = {
         }, {
           loader: 'css-loader',
           options: {
-            modules: true,
+            modules: {
+              localIdentName: process.env.NODE_ENV === 'dev' ? '__[local]--[hash:base64]' : '[hash:base64]',
+            },
             importLoaders: 2,
           },
         },
